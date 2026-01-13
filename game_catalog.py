@@ -51,7 +51,7 @@ class GameCatalog:
                 return f'''Найдена игра с таким же названием на этой платформе.
                 Используйте update_game, чтобы обновить данные.'''
             
-        self.__game_catalog.update({new_game_id : [new_game, status, comment]})
+        self.__game_catalog[new_game_id] = [new_game, status, comment]
         return f"Игра {new_game.title} добавлена в каталог с ID {new_game_id}."
 
 
