@@ -1,5 +1,4 @@
-# Класс "Игра в списке игр"
-
+# Класс "Игра в общем смысле"
 class Game:
     def __init__(self, title, platform, year, genres):
         self.title = title
@@ -16,7 +15,9 @@ class Game:
     def delete_genres(self, genres): pass
     def clear_genres(self): pass
     
+# TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
 
+# Класс "Каталог игр"
 class GameCatalog:
     def __init__(self):
         self.__game_catalog = dict()
