@@ -2,14 +2,20 @@
 class Game:
     def __init__(self, title, platform, year, genres):
         # TODO: проверить на пустые значения, выбросить исключение
+        # TODO: переделать в свойства
         self.title = title
         self.platform = platform
         self.year = year
         self.genres = genres
 
-    # TODO: переделать на возвращение данных, а не строки
+
     def info(self):
-        return f"Title: {self.title}\nPlatform: {self.platform}\nYear: {self.year}\nGenres: {self.genres}\n"
+        return {
+            "title": self.title,
+            "platform": self.platform,
+            "year": self.year,
+            "genres": self.genres
+        }
     
     # TODO: Обновление и удаление жанров
     def add_genres(self, genres): pass
@@ -23,8 +29,12 @@ class GameInList(Game):
         self.status = status
         self.comment = comment
 
+
     def info(self):
-        return super().info() + f"Status: {self.status}\nComment:\n{self.comment}"
+        info_dict = super().info()
+        info_dict["status"] = self.status
+        info_dict["comment"] = self.comment
+        return info_dict
 
 
 
