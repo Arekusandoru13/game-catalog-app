@@ -6,7 +6,7 @@ class Game:
         self.title = title
         self.platform = platform
         self.year = year
-        self.genres = genres
+        self.genres = set(genres)
 
 
     def info(self):
@@ -24,7 +24,7 @@ class Game:
     
 # TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
 class GameInList(Game):
-    def __init__(self, title, platform, year, genres, status = "Wishlist", comment = ""):
+    def __init__(self, title, platform, year, genres, status, comment):
         super().__init__(title, platform, year, genres)
         self.status = status
         self.comment = comment
@@ -63,7 +63,7 @@ class GameCatalog:
         return new_id
 
     # Добавляет игру. Возвращает код операйии и game_id
-    def add_game(self, title, platform, year, genres, status, comment):
+    def add_game(self, title, platform, year, genres, status="Wishlist", comment=""):
         # Генерируем ID
         new_game_id = GameCatalog.__generate_game_id(title, platform)
         #TODO: сделать выход через исключение
@@ -121,6 +121,6 @@ class GameCatalog:
 
     # Свойство для получения полного списка (может быть медленным)
     @property
-    def get_full_catalog(self):
-        return self.__game_catalog
+    def game_catalog(self):
+        return self.__game_catalog.copy()
 
