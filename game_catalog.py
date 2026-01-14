@@ -1,14 +1,15 @@
 # Класс "Игра в общем смысле"
 class Game:
     def __init__(self, title, platform, year, genres):
+        # TODO: проверить на пустые значения, выбросить исключение
         self.title = title
         self.platform = platform
         self.year = year
         self.genres = genres
 
-
+    # TODO: переделать на возвращение данных, а не строки
     def info(self):
-        return f"Title: {self.title}\nPlatform: {self.platform}\nYear: {self.year}\nGenres: {self.genres}"
+        return f"Title: {self.title}\nPlatform: {self.platform}\nYear: {self.year}\nGenres: {self.genres}\n"
     
     # TODO: Обновление и удаление жанров
     def add_genres(self, genres): pass
@@ -16,18 +17,29 @@ class Game:
     def clear_genres(self): pass
     
 # TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
+class GameInList(Game):
+    def __init__(self, title, platform, year, genres, status = "Wishlist", comment = ""):
+        super().__init__(title, platform, year, genres)
+        self.status = status
+        self.comment = comment
+
+    def info(self):
+        return super().info() + f"Status: {self.status}\nComment:\n{self.comment}"
+
+
 
 # Класс "Каталог игр"
 class GameCatalog:
     def __init__(self):
+        # Игры хранятся в формате game_id : game_in_list
         self.__game_catalog = dict()
 
 
     # Генерируем ID из названия, используя только первую букву, согласные и цифры.
-    def __generate_game_id(game):
-        id = game.title.lower().lstrip()
+    def __generate_game_id(title, platform):
+        id = title.lower().lstrip()
         id = id.replace(" ", "")
-        id = GameCatalog.__delete_vowels_for_id(id + game.platform.lower())
+        id = GameCatalog.__delete_vowels_for_id(id + platform.lower())
         return id
 
     # Удаляет все знаки кроме согласных и цифр из строки.
@@ -40,39 +52,41 @@ class GameCatalog:
                 new_id = new_id + letter
         return new_id
 
-    def add_game(self, new_game, status, comment = ""):
-        new_game_id = GameCatalog.__generate_game_id(new_game)
-        # Если игра есть, ошибка, либо можно вернуть кортеж (неуспешная операция, ID игры)
+    # Добавляет игру. Возвращает код операйии и game_id
+    def add_game(self, title, platform, year, genres, status, comment):
+        # Генерируем ID
+        new_game_id = GameCatalog.__generate_game_id(title, platform)
+        #TODO: сделать выход через исключение
+        # Если игра есть, ошибка
         if new_game_id in self.__game_catalog:
-            return f"Ошибка. Игра с ID {new_game_id} уже существует!"
-        # Если есть игра с таким же названием и платформой, предложить обновить данные.
-        for id, game_in_catalog in enumerate(self.__game_catalog):
-            if (game_in_catalog[id][0].title == new_game.title
-            and game_in_catalog[id][0].platform == new_game.platform):
-                return f'''Найдена игра с таким же названием на этой платформе.
-                Используйте update_game, чтобы обновить данные.'''
-            
-        self.__game_catalog[new_game_id] = [new_game, status, comment]
-        return f"Игра {new_game.title} добавлена в каталог с ID {new_game_id}."
+            return (0, new_game_id)
+        # Создаём объект Game и добавляем в каталог
+        try:
+            new_game = GameInList(title, platform, year, genres, status, comment)
+        except Exception as e:
+            raise e
+        self.__game_catalog[new_game_id] = new_game
+        return (1, new_game_id)
 
-
+    # Возвращает список данных игры
     def get_game(self, game_id):
         if game_id not in self.__game_catalog:
-            return "Игры с указанным ID нет в каталоге."
-        return self.__game_catalog[game_id][0].info()
+            return None
+        return self.__game_catalog[game_id].info()
 
+    # Удаляет игру с указанным ID, возвращает удалённую игру
     def delete_game(self, game_id):
         if game_id not in self.__game_catalog:
-            return "Игры с указанным ID нет в каталоге."
-        deleted_entry = self.__game_catalog.pop(game_id)
-        # Можно вернуть ещё и игру, пока без этого.
-        return f"Игра с ID {game_id} удалена."
+            return None
+        deleted_game = self.__game_catalog.pop(game_id)
+        return deleted_game
+
 
     # принимает ID игры и словарь с полями для обновления
     # TODO: при обновлении названия и платформы сгенерировать новый ID
     def update_game(self, game_id, new_data):
         if game_id not in self.__game_catalog:
-            return "Игры с указанным ID нет в каталоге."
+            raise Exception("Нет такой игры.")
         edited_game = self.__game_catalog[game_id]
         if "title" in new_data:
             edited_game[0].title = new_data["title"]
