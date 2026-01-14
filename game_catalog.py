@@ -81,13 +81,13 @@ class GameCatalog:
     # Возвращает список данных игры
     def get_game(self, game_id):
         if game_id not in self.__game_catalog:
-            return None
+            raise Exception("Нет такой игры.")
         return self.__game_catalog[game_id].info()
 
     # Удаляет игру с указанным ID, возвращает удалённую игру
     def delete_game(self, game_id):
         if game_id not in self.__game_catalog:
-            return None
+            raise Exception("Нет такой игры.")
         deleted_game = self.__game_catalog.pop(game_id)
         return deleted_game
 
@@ -99,38 +99,28 @@ class GameCatalog:
             raise Exception("Нет такой игры.")
         edited_game = self.__game_catalog[game_id]
         if "title" in new_data:
-            edited_game[0].title = new_data["title"]
+            edited_game.title = new_data["title"]
         if "platform" in new_data:
-            edited_game[0].platform = new_data["platform"]
+            edited_game.platform = new_data["platform"]
         if "year" in new_data:
-            edited_game[0].year = new_data["year"]
+            edited_game.year = new_data["year"]
         if "genres" in new_data:
             if "add" in new_data["genres"]:
-                edited_game[0].add_genres(new_data["genres"]["add"])
+                edited_game.add_genres(new_data["genres"]["add"])
             if "delete" in new_data["genres"]:
-                edited_game[0].delete_genres(new_data["genres"]["delete"])
+                edited_game.delete_genres(new_data["genres"]["delete"])
             if "clear" in new_data["genres"]:
-                edited_game[0].clear_genres()
+                edited_game.clear_genres()
         if "status" in new_data:
-            edited_game[1] = new_data["status"]
+            edited_game.status = new_data["status"]
         if "comment" in new_data:
-            edited_game[2] = new_data["comment"]
-        return "Данные обновлены."
+            edited_game.comment = new_data["comment"]
+        return 1
 
 
-    def get_full_list(self):
-        if not self.__game_catalog:
-            return "Каталог пуст."
-        # Формируем список отформатированных строк для каждой игры
-        '''all_listed_games = [f"{game[0].info()}\n"
-                            + "Статус: {game[1]}\n"
-                            + "Комментарий: {game[2]}"
-                            + "ID: {id}" for id, game in self.__game_catalog.items()]'''
-        all_listed_games = list()
-        for id, game in self.__game_catalog.items():
-            all_listed_games.append(f"{game[0].info()}\n"
-            + f"ID: {id}\n"
-            + f"Статус: {game[1]}\n"
-            + f"Комментарий: {game[2]}\n")
-        return "\n".join(all_listed_games)
+
+    # Свойство для получения полного списка (может быть медленным)
+    @property
+    def get_full_catalog(self):
+        return self.__game_catalog
 
