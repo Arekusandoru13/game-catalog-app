@@ -19,11 +19,19 @@ class Game:
             "genres": self.genres
         }
     
-    # TODO: Обновление и удаление жанров
-    def add_genres(self, genres): pass
-    def delete_genres(self, genres): pass
-    def clear_genres(self): pass
+
+    # TODO: Проверки и список допустимых жанров
+    def add_genres(self, genres): 
+        self.genres = self.genres.union(set(genres))
+
+    def delete_genres(self, genres):
+        self.genres = self.genres.difference(set(genres))
+
+    def clear_genres(self):
+        self.genres.clear()
     
+
+
 # TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
 class GameInList(Game):
     def __init__(self, title, platform, year, genres, status, comment):
