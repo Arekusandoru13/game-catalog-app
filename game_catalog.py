@@ -46,22 +46,40 @@ class GameCatalog:
         # Игры хранятся в формате game_id : game_in_list
         self.__game_catalog = dict()
 
+
     # Работа с файлом
     def load_from_file(self, path):
         try:
             with open(path, "r") as file:
-                self.__game_catalog = json.load(file)
+                imported_catalog = json.load(file)
+                for game_dict in imported_catalog.values():
+                    self.add_game(game_dict.get("title"),
+                                  game_dict.get("platform"),
+                                  game_dict.get("year"),
+                                  game_dict.get("genres"),
+                                  game_dict.get("status"),
+                                  game_dict.get("comment"))
         except FileNotFoundError as e:
             raise e
         
     def save_to_file(self, path):
         try:
             with open(path, "w") as file:
-                self.__game_catalog = json.dump(self.__game_catalog, file, sort_keys=True, indent=2)
+                self.__game_catalog = json.dump(self.__game_catalog_serializer(),
+                                                file,
+                                                indent=2)
         except FileNotFoundError as e:
             raise e
         
-        
+
+    # Преобразуем данные в словари и списки для сохранения в json
+    def __game_catalog_serializer(self):
+        serialized_dict = {}
+        for id, game in self.__game_catalog.items():
+            serialized_dict[id] = game.info()
+            serialized_dict[id]["genres"] = list(serialized_dict[id]["genres"])
+        return serialized_dict
+    
 
     # Генерируем ID из названия, используя только первую букву, согласные и цифры.
     def __generate_game_id(title, platform):
@@ -69,6 +87,7 @@ class GameCatalog:
         id = id.replace(" ", "")
         id = GameCatalog.__delete_vowels_for_id(id + platform.lower())
         return id
+
 
     # Удаляет все знаки кроме согласных и цифр из строки.
     def __delete_vowels_for_id(id_str):
@@ -79,6 +98,7 @@ class GameCatalog:
             or letter.isdigit()):
                 new_id = new_id + letter
         return new_id
+
 
     # Добавляет игру. Возвращает код операции и game_id
     def add_game(self, title, platform, year, genres, status="Wishlist", comment=""):
@@ -96,11 +116,13 @@ class GameCatalog:
         self.__game_catalog[new_game_id] = new_game
         return (1, new_game_id)
 
+
     # Возвращает список данных игры
     def get_game(self, game_id):
         if game_id not in self.__game_catalog:
             raise Exception("Нет такой игры.")
         return self.__game_catalog[game_id].info()
+
 
     # Удаляет игру с указанным ID, возвращает удалённую игру
     def delete_game(self, game_id):

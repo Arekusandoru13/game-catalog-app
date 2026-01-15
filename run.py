@@ -90,7 +90,7 @@ def delete_game_cli(catalog):
 
 def show_all_games(catalog):
     print(catalog.game_catalog)
-1
+
 
 def main():
     print("Мой каталог игр.")
