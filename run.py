@@ -77,8 +77,8 @@ def update_game_cli(catalog):
             case "+": break
             case _: print ("Некорректный ввод.")
 
-    for k, v in dict(new_data.items()):
-        if not v: del new_data[k]
+    for k in list(new_data):
+        if not new_data[k]: del new_data[k]
     print(new_data)
     catalog.update_game(id, new_data)
     print("Данные игры обновлены.")
