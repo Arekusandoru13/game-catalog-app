@@ -1,5 +1,7 @@
 from game_catalog import *
 
+CATALOG_FILENAME = "game_catalog.json"
+
 def add_game_cli(catalog):
     print("Введите данные игры: ")
     title = input("Название: ")
@@ -87,12 +89,16 @@ def delete_game_cli(catalog):
 
 
 def show_all_games(catalog):
-    pass
-
+    print(catalog.game_catalog)
+1
 
 def main():
     print("Мой каталог игр.")
     catalog = GameCatalog()
+    try:
+        catalog.load_from_file(CATALOG_FILENAME)
+    except Exception as e:
+        print(e)
 
     while True:
         print("\nВыберите действие:\n"
@@ -113,6 +119,11 @@ def main():
             case "0": break
             case _: print("Неподдерживаемый ввод."); continue
 
+    print("Сохранение в файл.")
+    try:
+        catalog.save_to_file(CATALOG_FILENAME)
+    except Exception as e:
+        print(e)
     print("Выход из программы.")
 
 

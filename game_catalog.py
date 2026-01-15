@@ -1,3 +1,5 @@
+import json
+
 # Класс "Игра в общем смысле"
 class Game:
     def __init__(self, title, platform, year, genres):
@@ -44,6 +46,22 @@ class GameCatalog:
         # Игры хранятся в формате game_id : game_in_list
         self.__game_catalog = dict()
 
+    # Работа с файлом
+    def load_from_file(self, path):
+        try:
+            with open(path, "r") as file:
+                self.__game_catalog = json.load(file)
+        except FileNotFoundError as e:
+            raise e
+        
+    def save_to_file(self, path):
+        try:
+            with open(path, "w") as file:
+                self.__game_catalog = json.dump(self.__game_catalog, file, sort_keys=True, indent=2)
+        except FileNotFoundError as e:
+            raise e
+        
+        
 
     # Генерируем ID из названия, используя только первую букву, согласные и цифры.
     def __generate_game_id(title, platform):
@@ -62,7 +80,7 @@ class GameCatalog:
                 new_id = new_id + letter
         return new_id
 
-    # Добавляет игру. Возвращает код операйии и game_id
+    # Добавляет игру. Возвращает код операции и game_id
     def add_game(self, title, platform, year, genres, status="Wishlist", comment=""):
         # Генерируем ID
         new_game_id = GameCatalog.__generate_game_id(title, platform)
