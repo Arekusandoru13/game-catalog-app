@@ -94,7 +94,12 @@ def delete_game_cli(catalog):
     print(f"Игра {game_data.title} удалена из каталога.\n")
 
 def show_all_games(catalog):
-    print(catalog.game_catalog)
+    if not catalog:
+        print("Список пуст.")
+        return
+    print("\nВсе игры в каталоге:")
+    for game_id, game in catalog.game_catalog.items():
+        print(f"{game_id:>15} - {game.title}")
 
 
 def main():
