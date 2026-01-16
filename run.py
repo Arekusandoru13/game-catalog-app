@@ -85,8 +85,13 @@ def update_game_cli(catalog):
 
 
 def delete_game_cli(catalog):
-    pass
-
+    id = input("Введите ID игры: ")
+    try:
+        game_data = catalog.delete_game(id)
+    except Exception as e:
+        print(e)
+        return
+    print(f"Игра {game_data.title} удалена из каталога.\n")
 
 def show_all_games(catalog):
     print(catalog.game_catalog)
