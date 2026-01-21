@@ -108,6 +108,7 @@ def main():
     try:
         catalog.load_from_file(CATALOG_FILENAME)
     except Exception as e:
+        print("Загрузить из файла не удалось.")
         print(e)
 
     while True:
