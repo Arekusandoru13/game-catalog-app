@@ -2,12 +2,12 @@ import json
 
 # Класс "Игра в общем смысле"
 class Game:
-    def __init__(self, title, platform, year, genres):
+    def __init__(self, title, platform, release_date, genres):
         # TODO: проверить на пустые значения, выбросить исключение
         # TODO: переделать в свойства
         self.title = title
         self.platform = platform
-        self.year = year
+        self.release_date = release_date
         self.genres = set(genres)
 
 
@@ -15,7 +15,7 @@ class Game:
         return {
             "title": self.title,
             "platform": self.platform,
-            "year": self.year,
+            "release_date": self.release_date,
             "genres": self.genres
         }
     
@@ -34,8 +34,8 @@ class Game:
 
 # TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
 class GameInList(Game):
-    def __init__(self, title, platform, year, genres, status, comment):
-        super().__init__(title, platform, year, genres)
+    def __init__(self, title, platform, release_date, genres, status, comment):
+        super().__init__(title, platform, release_date, genres)
         self.status = status
         self.comment = comment
 
@@ -63,7 +63,7 @@ class GameCatalog:
                 for game_dict in imported_catalog.values():
                     self.add_game(game_dict.get("title"),
                                   game_dict.get("platform"),
-                                  game_dict.get("year"),
+                                  game_dict.get("release_date"),
                                   game_dict.get("genres"),
                                   game_dict.get("status"),
                                   game_dict.get("comment"))
@@ -73,10 +73,10 @@ class GameCatalog:
     def save_to_file(self, path):
         try:
             with open(path, "w") as file:
-                self.__game_catalog = json.dump(self.__game_catalog_serializer(),
+                json.dump(self.__game_catalog_serializer(),
                                                 file,
                                                 indent=2)
-        except FileNotFoundError as e:
+        except Exception as e:
             raise e
         
 
@@ -109,7 +109,7 @@ class GameCatalog:
 
 
     # Добавляет игру. Возвращает код операции и game_id
-    def add_game(self, title, platform, year, genres, status="Wishlist", comment=""):
+    def add_game(self, title, platform, release_date, genres, status="Wishlist", comment=""):
         # Генерируем ID
         new_game_id = GameCatalog.__generate_game_id(title, platform)
         #TODO: сделать выход через исключение
@@ -118,13 +118,13 @@ class GameCatalog:
             return (0, new_game_id)
         # Создаём объект Game и добавляем в каталог
         try:
-            new_game = GameInList(title, platform, year, genres, status, comment)
+            new_game = GameInList(title, platform, release_date, genres, status, comment)
         except Exception as e:
             raise e
         self.__game_catalog[new_game_id] = new_game
         return (1, new_game_id)
 
-
+    # TODO: Сделать исключение на случай отсутствия игры и функцию для проверки наличия
     # Возвращает список данных игры
     def get_game(self, game_id):
         if game_id not in self.__game_catalog:
@@ -150,8 +150,8 @@ class GameCatalog:
             edited_game.title = new_data["title"]
         if "platform" in new_data:
             edited_game.platform = new_data["platform"]
-        if "year" in new_data:
-            edited_game.year = new_data["year"]
+        if "release_date" in new_data:
+            edited_game.release_date = new_data["release_date"]
         if "genres" in new_data:
             if "add" in new_data["genres"]:
                 edited_game.add_genres(new_data["genres"]["add"])

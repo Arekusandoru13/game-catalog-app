@@ -6,13 +6,13 @@ def add_game_cli(catalog):
     print("Введите данные игры: ")
     title = input("Название: ")
     platform = input("Платформа: ")
-    year = input("Год выхода: ")
+    release_date = input("Дата выхода: ")
     genres = []
     genres_str = input("Укажите жанры через запятую с пробелом:\n")
     genres = genres_str.split(", ")
     status = input("Статус добавленной игры: ")
     comment = input("Комментарий: ")
-    add_result = catalog.add_game(title, platform, year, genres, status, comment)
+    add_result = catalog.add_game(title, platform, release_date, genres, status, comment)
     if add_result[0]:
         print(f"\nИгра успешно добавлена с ID {add_result[1]}")
     else:
@@ -54,7 +54,7 @@ def update_game_cli(catalog):
         selection = input("Какие данные нужно обновить?\n"
                           "1. Название\n"
                           "2. Платформа\n"
-                          "3. Год выхода\n"
+                          "3. Дата выхода\n"
                           "4. Жанры\n"
                           "5. Статус\n"
                           "6. Комментарий\n"
@@ -66,7 +66,7 @@ def update_game_cli(catalog):
             case "2":
                 new_data["platform"] = input("Введите новую платформу: ")
             case "3":
-                new_data["year"] = input("Введите новый год выхода: ")
+                new_data["release_date"] = input("Введите новую дату выхода в формате YYYY.MM.DD: ")
             case "4":
                 new_data["genres"] = update_genres_cli()
             case "5":
@@ -79,7 +79,7 @@ def update_game_cli(catalog):
 
     for k in list(new_data):
         if not new_data[k]: del new_data[k]
-    print(new_data)
+    #print(new_data)
     catalog.update_game(id, new_data)
     print("Данные игры обновлены.")
 
