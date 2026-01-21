@@ -108,6 +108,13 @@ class GameCatalog:
         return new_id
 
 
+    # Изменяет id уже имеющейся игры
+    def __change_game_id(self, game_id):
+        edited_game = self.__game_catalog.pop(game_id)
+        new_game_id = GameCatalog.__generate_game_id(edited_game.title, edited_game.platform)
+        self.__game_catalog[new_game_id] = edited_game
+
+
     # Добавляет игру. Возвращает код операции и game_id
     def add_game(self, title, platform, release_date, genres, status="Wishlist", comment=""):
         # Генерируем ID
@@ -146,10 +153,13 @@ class GameCatalog:
         if game_id not in self.__game_catalog:
             raise Exception("Нет такой игры.")
         edited_game = self.__game_catalog[game_id]
+        need_new_id = False
         if "title" in new_data:
             edited_game.title = new_data["title"]
+            need_new_id = True
         if "platform" in new_data:
             edited_game.platform = new_data["platform"]
+            need_new_id = True
         if "release_date" in new_data:
             edited_game.release_date = new_data["release_date"]
         if "genres" in new_data:
@@ -163,6 +173,8 @@ class GameCatalog:
             edited_game.status = new_data["status"]
         if "comment" in new_data:
             edited_game.comment = new_data["comment"]
+        
+        if need_new_id: self.__change_game_id(game_id)
         return 1
 
 
