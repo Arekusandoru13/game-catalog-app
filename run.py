@@ -1,6 +1,7 @@
 from game_catalog import *
 
 CATALOG_FILENAME = "game_catalog.json"
+CONNECTION_STRING = "dbname=gamesdb user=postgres password=postgresPaseu host=localhost"
 
 def add_game_cli(catalog):
     print("Введите данные игры: ")
@@ -102,15 +103,7 @@ def show_all_games(catalog):
         print(f"{game_id:>15} - {game.title}")
 
 
-def main():
-    print("Мой каталог игр.")
-    catalog = GameCatalog()
-    try:
-        catalog.load_from_file(CATALOG_FILENAME)
-    except Exception as e:
-        print("Загрузить из файла не удалось.")
-        print(e)
-
+def load_interface(catalog):
     while True:
         print("\nВыберите действие:\n"
               "1. Добавить игру в каталог.\n"
@@ -130,11 +123,15 @@ def main():
             case "0": break
             case _: print("Неподдерживаемый ввод."); continue
 
-    print("Сохранение в файл.")
-    try:
-        catalog.save_to_file(CATALOG_FILENAME)
-    except Exception as e:
-        print(e)
+
+
+def main():
+    print("Мой каталог игр.")
+    with GameCatalog(CONNECTION_STRING) as catalog:
+        load_interface(catalog)
+    
+
+
     print("Выход из программы.")
 
 

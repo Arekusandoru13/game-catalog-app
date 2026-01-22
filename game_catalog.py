@@ -1,4 +1,6 @@
 import json
+import psycopg
+
 
 # Класс "Игра в общем смысле"
 class Game:
@@ -50,9 +52,20 @@ class GameInList(Game):
 
 # Класс "Каталог игр"
 class GameCatalog:
-    def __init__(self):
-        # Игры хранятся в формате game_id : game_in_list
-        self.__game_catalog = dict()
+    def __init__(self, connection_string):
+        self.__connection_string = connection_string
+
+
+    def __enter__(self):
+        self.connection = psycopg.connect(self.__connection_string)
+        print('connection opened')
+        return self
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()
+        print('connection closed')
+
 
 
     # Работа с файлом
@@ -115,28 +128,48 @@ class GameCatalog:
         self.__game_catalog[new_game_id] = edited_game
 
 
+    def check_game_existence(self, game_id):
+        pass
+
+
     # Добавляет игру. Возвращает код операции и game_id
     def add_game(self, title, platform, release_date, genres, status="Wishlist", comment=""):
         # Генерируем ID
         new_game_id = GameCatalog.__generate_game_id(title, platform)
-        #TODO: сделать выход через исключение
+        #TODO: надо ли делать выход через исключение?
         # Если игра есть, ошибка
-        if new_game_id in self.__game_catalog:
+        game_info = self.get_game(new_game_id)
+        if game_info:
             return (0, new_game_id)
         # Создаём объект Game и добавляем в каталог
         try:
             new_game = GameInList(title, platform, release_date, genres, status, comment)
         except Exception as e:
             raise e
-        self.__game_catalog[new_game_id] = new_game
+        sql = ("INSERT INTO game_catalog (game_id, title, platform, release_date, "
+                                         "genres, status, commentary) "
+               f"VALUES ({new_game_id}, {new_game.title}, {new_game.platform}, {new_game.release_date}, "
+                                        f"{new_game.genres}, {new_game.status}, {new_game.comment});")
+        #with self.connection.cursor() as cursor:
+        #    cursor.execute(sql)
+        #    self.connection.commit()
+        print(sql)
         return (1, new_game_id)
 
-    # TODO: Сделать исключение на случай отсутствия игры и функцию для проверки наличия
+
     # Возвращает список данных игры
     def get_game(self, game_id):
-        if game_id not in self.__game_catalog:
-            raise Exception("Нет такой игры.")
-        return self.__game_catalog[game_id].info()
+        with self.connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT title, platform, release_date, genres, status, commentary
+                FROM game_catalog WHERE game_id=%s;
+                ''', 
+                (game_id,))
+            if cursor.rowcount == 0:
+                return None
+            title, platform, release_date, genres, status, commentary = cursor.fetchone()
+            game = GameInList(title, platform, release_date, genres, status, commentary)
+            return game.info()
 
 
     # Удаляет игру с указанным ID, возвращает удалённую игру
