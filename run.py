@@ -92,7 +92,7 @@ def delete_game_cli(catalog):
     except Exception as e:
         print(e)
         return
-    print(f"Игра {game_data.title} удалена из каталога.\n")
+    print(f"Игра {game_data['title']} удалена из каталога.\n")
 
 def show_all_games(catalog):
     if not catalog:

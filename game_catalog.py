@@ -18,7 +18,7 @@ class Game:
             "title": self.title,
             "platform": self.platform,
             "release_date": self.release_date,
-            "genres": self.genres
+            "genres": list(self.genres)
         }
     
 
@@ -38,7 +38,10 @@ class Game:
 class GameInList(Game):
     def __init__(self, title, platform, release_date, genres, status, comment):
         super().__init__(title, platform, release_date, genres)
-        self.status = status
+        if status:
+            self.status = status
+        else:
+            self.status = "Wishlist"
         self.comment = comment
 
 
@@ -146,14 +149,15 @@ class GameCatalog:
             new_game = GameInList(title, platform, release_date, genres, status, comment)
         except Exception as e:
             raise e
-        sql = ("INSERT INTO game_catalog (game_id, title, platform, release_date, "
-                                         "genres, status, commentary) "
-               f"VALUES ({new_game_id}, {new_game.title}, {new_game.platform}, {new_game.release_date}, "
-                                        f"{new_game.genres}, {new_game.status}, {new_game.comment});")
-        #with self.connection.cursor() as cursor:
-        #    cursor.execute(sql)
-        #    self.connection.commit()
-        print(sql)
+        query = (t'''
+            INSERT INTO game_catalog (game_id, title, platform, release_date, 
+                                      genres, status, commentary) 
+            VALUES ({new_game_id}, {new_game.title}, {new_game.platform}, {new_game.release_date}, 
+                    {list(new_game.genres)}, {new_game.status}, {new_game.comment});
+               ''')
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            self.connection.commit()
         return (1, new_game_id)
 
 
@@ -172,12 +176,20 @@ class GameCatalog:
             return game.info()
 
 
-    # Удаляет игру с указанным ID, возвращает удалённую игру
+    # Удаляет игру с указанным ID, возвращает словарь с данными удалённой игры
     def delete_game(self, game_id):
-        if game_id not in self.__game_catalog:
+        game_info = self.get_game(game_id)
+        if not game_info:
             raise Exception("Нет такой игры.")
-        deleted_game = self.__game_catalog.pop(game_id)
-        return deleted_game
+        
+        query = (t'''
+            DELETE FROM game_catalog WHERE game_id={game_id};
+               ''')
+        with self.connection.cursor() as cursor:
+            cursor.execute(query)
+            self.connection.commit()
+
+        return game_info
 
 
     # принимает ID игры и словарь с полями для обновления
