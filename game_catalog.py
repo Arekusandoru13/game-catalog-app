@@ -241,8 +241,20 @@ class GameCatalog:
         else: return game_id
 
 
+    def get_all_games(self):
+        with self.connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT game_id, title
+                FROM game_catalog;
+                           ''')
+            
+            all_games_dict = {}
+            for game_id, title in cursor:
+                all_games_dict[game_id] = title
+        return all_games_dict
 
-    # Свойство для получения полного списка (может быть медленным)
+
+    # Свойство для получения полного списка (может быть медленным) (obsolete)
     @property
     def game_catalog(self):
         return self.__game_catalog.copy()
