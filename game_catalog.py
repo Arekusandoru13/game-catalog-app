@@ -18,7 +18,7 @@ class Game:
             "title": self.title,
             "platform": self.platform,
             "release_date": self.release_date,
-            "genres": list(self.genres)
+            "genres": self.genres
         }
     
 
@@ -48,7 +48,7 @@ class GameInList(Game):
     def info(self):
         info_dict = super().info()
         info_dict["status"] = self.status
-        info_dict["comment"] = self.comment
+        info_dict["notes"] = self.comment
         return info_dict
 
 
@@ -82,7 +82,7 @@ class GameCatalog:
                                   game_dict.get("release_date"),
                                   game_dict.get("genres"),
                                   game_dict.get("status"),
-                                  game_dict.get("comment"))
+                                  game_dict.get("notes"))
         except FileNotFoundError as e:
             raise e
         
@@ -151,7 +151,7 @@ class GameCatalog:
             raise e
         query = (t'''
             INSERT INTO game_catalog (game_id, title, platform, release_date, 
-                                      genres, status, commentary) 
+                                      genres, status, notes) 
             VALUES ({new_game_id}, {new_game.title}, {new_game.platform}, {new_game.release_date}, 
                     {list(new_game.genres)}, {new_game.status}, {new_game.comment});
                ''')
@@ -161,11 +161,11 @@ class GameCatalog:
         return (1, new_game_id)
 
 
-    # Возвращает список данных игры
+    # Возвращает словарь с данными об игре
     def get_game(self, game_id):
         with self.connection.cursor() as cursor:
             cursor.execute('''
-                SELECT title, platform, release_date, genres, status, commentary
+                SELECT title, platform, release_date, genres, status, notes
                 FROM game_catalog WHERE game_id=%s;
                 ''', 
                 (game_id,))
@@ -192,35 +192,53 @@ class GameCatalog:
         return game_info
 
 
+    def update_genres(old_genres_list, genres_operations_dict):
+        pass
+
     # принимает ID игры и словарь с полями для обновления
     # TODO: при обновлении названия и платформы сгенерировать новый ID
     def update_game(self, game_id, new_data):
-        if game_id not in self.__game_catalog:
+        edited_game = self.get_game(game_id)
+        if not edited_game:
             raise Exception("Нет такой игры.")
-        edited_game = self.__game_catalog[game_id]
+        # Собираем подходящие данные, которые нужно обновить
+        updates = dict()
+        for k in edited_game:
+            if k in new_data:
+                updates[k] = new_data[k]
+        # Если данных для обновления нет или передали косячный new_data - выходим
+        if not updates:
+            return 0
+        # Форматируем список жанров
+        if 'genres' in updates:
+            updates['genres'] = GameCatalog.update_genres(edited_game['genres'], updates['genres'])
+        # Надо обновить game_id?
         need_new_id = False
-        if "title" in new_data:
-            edited_game.title = new_data["title"]
+        if 'title' in updates:
+            title = updates['title']
             need_new_id = True
-        if "platform" in new_data:
-            edited_game.platform = new_data["platform"]
+        else:
+            title = edited_game["title"]
+        if 'platform' in updates:
+            platform = updates['platform']
             need_new_id = True
-        if "release_date" in new_data:
-            edited_game.release_date = new_data["release_date"]
-        if "genres" in new_data:
-            if "add" in new_data["genres"]:
-                edited_game.add_genres(new_data["genres"]["add"])
-            if "delete" in new_data["genres"]:
-                edited_game.delete_genres(new_data["genres"]["delete"])
-            if "clear" in new_data["genres"]:
-                edited_game.clear_genres()
-        if "status" in new_data:
-            edited_game.status = new_data["status"]
-        if "comment" in new_data:
-            edited_game.comment = new_data["comment"]
+        else:
+            platform = edited_game['platform']
+        if need_new_id:
+            updates['game_id'] = GameCatalog.__generate_game_id(title, platform)
         
-        if need_new_id: self.__change_game_id(game_id)
-        return 1
+        # TODO: собрать в один запрос
+        with self.connection.cursor() as cursor:
+            for key, value in updates.items():
+                cursor.execute(
+                    psycopg.sql.SQL(
+                        "UPDATE game_catalog SET {}=(%s) WHERE game_id=%s"
+                    ).format(psycopg.sql.Identifier(key)), (value, game_id)
+            )        
+        self.connection.commit()
+
+        if need_new_id: return updates["game_id"]
+        else: return game_id
 
 
 

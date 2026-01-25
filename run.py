@@ -12,8 +12,8 @@ def add_game_cli(catalog):
     genres_str = input("Укажите жанры через запятую с пробелом:\n")
     genres = genres_str.split(", ")
     status = input("Статус добавленной игры: ")
-    comment = input("Комментарий: ")
-    add_result = catalog.add_game(title, platform, release_date, genres, status, comment)
+    notes = input("Комментарий: ")
+    add_result = catalog.add_game(title, platform, release_date, genres, status, notes)
     if add_result[0]:
         print(f"\nИгра успешно добавлена с ID {add_result[1]}")
     else:
@@ -73,7 +73,7 @@ def update_game_cli(catalog):
             case "5":
                 new_data["status"] = input("Введите новый статус: ")
             case "6":
-                new_data["comment"] = input("Введите новый комментарий:\n")
+                new_data["notes"] = input("Введите новый комментарий:\n")
             case "0": return
             case "+": break
             case _: print ("Некорректный ввод.")
@@ -81,8 +81,8 @@ def update_game_cli(catalog):
     for k in list(new_data):
         if not new_data[k]: del new_data[k]
     #print(new_data)
-    catalog.update_game(id, new_data)
-    print("Данные игры обновлены.")
+    id = catalog.update_game(id, new_data)
+    print(f"Данные игры с ID {id} обновлены.")
 
 
 def delete_game_cli(catalog):
