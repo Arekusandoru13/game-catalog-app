@@ -1,16 +1,79 @@
 import json
 import psycopg
+import re
 
 
 # Класс "Игра в общем смысле"
 class Game:
+    # ограничения для соответствия ограничениям в БД
+    MAX_TITLE_LENGTH = 30
+    MAX_PLATFORM_LENGTH = 15
+    MAX_GENRE_LENGTH = 15
+    DATE_PATTERNS = [
+        r"^\d{4}\.\d{2}\.\d{2}$",   # YYYY.MM.DD
+        r"^\d{4}\.\d{2}\.xx$",      # YYYY.MM.xx
+        r"^\d{4}\.xx\.xx$",         # YYYY.xx.xx
+        r"^\d{4}\.q[1-4]$"          # YYYY.q1
+    ]
+
+    
     def __init__(self, title, platform, release_date, genres):
-        # TODO: проверить на пустые значения, выбросить исключение
-        # TODO: переделать в свойства
         self.title = title
         self.platform = platform
         self.release_date = release_date
-        self.genres = set(genres)
+        self.genres = genres
+
+    
+    @property
+    def title(self): return self.__title
+    @title.setter
+    def title(self, title):
+        title = title.strip()
+        if len(title) > self.MAX_TITLE_LENGTH:
+            raise ValueError("Название игры слишком длинное.")
+        if not title:
+            raise ValueError("Название игры не может быть пустым.")
+        self.__title = title
+        
+    
+    @property
+    def platform(self): return self.__platform
+    @platform.setter
+    def platform(self, platform):
+        platform = platform.strip()
+        if len(platform) > self.MAX_PLATFORM_LENGTH:
+            raise ValueError("Название платформы слишком длинное.")
+        if not platform:
+            raise ValueError("Платформа не может быть пустой.")
+        self.__platform = platform
+        
+
+    @classmethod
+    def _is_valid_date(cls, date_str):
+        return any(re.match(p, date_str) for p in cls.DATE_PATTERNS)
+
+
+    @property
+    def release_date(self): return self.__release_date
+    @release_date.setter
+    def release_date(self, release_date):
+        release_date = release_date.strip()
+        if self._is_valid_date(release_date):
+            self.__release_date = release_date
+        else:
+            raise ValueError("Неверный формат даты.")
+
+
+    @property
+    def genres(self): return self.__genres
+    @genres.setter
+    def genres(self, genres):
+        set_of_genres = set()
+        for genre in genres:
+            if genre:
+                set_of_genres.add(genre.strip())
+        self.__genres = set_of_genres
+        
 
 
     def info(self):
@@ -36,13 +99,31 @@ class Game:
 
 # TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
 class GameInList(Game):
+    
+    VALID_STATUSES = {'Wishlist', 'Backlog', 'Playing', 'Paused', 'Finished', 'Dropped'}
+
     def __init__(self, title, platform, release_date, genres, status, comment):
         super().__init__(title, platform, release_date, genres)
-        if status:
-            self.status = status
-        else:
-            self.status = "Wishlist"
+        self.status = status
         self.comment = comment
+
+
+    @property
+    def status(self): return self.__status
+    @status.setter
+    def status(self, status):
+        status = status.strip()
+        if status in self.VALID_STATUSES:
+            self.__status = status
+        else:
+            raise ValueError("Недопустимый статус.")
+        
+    
+    @property
+    def comment(self): return self.__comment
+    @comment.setter
+    def comment(self, comment):
+        self.__comment = comment
 
 
     def info(self):
