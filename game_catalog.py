@@ -170,7 +170,7 @@ class GameCatalog:
     def save_to_file(self, path):
         try:
             with open(path, "w") as file:
-                json.dump(self.__game_catalog_serializer(),
+                json.dump(self._game_catalog_serializer(),
                                                 file,
                                                 indent=2)
         except Exception as e:
@@ -178,7 +178,7 @@ class GameCatalog:
         
 
     # Преобразуем данные в словари и списки для сохранения в json
-    def __game_catalog_serializer(self):
+    def _game_catalog_serializer(self):
         serialized_dict = {}
         for id, game in self.__game_catalog.items():
             serialized_dict[id] = game.info()
@@ -187,15 +187,17 @@ class GameCatalog:
     
 
     # Генерируем ID из названия, используя только первую букву, согласные и цифры.
-    def __generate_game_id(title, platform):
+    @staticmethod
+    def _generate_game_id(title, platform):
         id = title.lower().lstrip()
         id = id.replace(" ", "")
-        id = GameCatalog.__delete_vowels_for_id(id + platform.lower())
+        id = GameCatalog._delete_vowels_for_id(id + platform.lower())
         return id
 
 
     # Удаляет все знаки кроме согласных и цифр из строки.
-    def __delete_vowels_for_id(id_str):
+    @staticmethod
+    def _delete_vowels_for_id(id_str):
         new_id = id_str[:1]
         for letter in id_str[1:]:
             if (letter in ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm',
@@ -206,9 +208,9 @@ class GameCatalog:
 
 
     # Изменяет id уже имеющейся игры
-    def __change_game_id(self, game_id):
+    def _change_game_id(self, game_id):
         edited_game = self.__game_catalog.pop(game_id)
-        new_game_id = GameCatalog.__generate_game_id(edited_game.title, edited_game.platform)
+        new_game_id = self._generate_game_id(edited_game.title, edited_game.platform)
         self.__game_catalog[new_game_id] = edited_game
 
 
@@ -219,7 +221,7 @@ class GameCatalog:
     # Добавляет игру. Возвращает код операции и game_id
     def add_game(self, title, platform, release_date, genres, status="Wishlist", comment=""):
         # Генерируем ID
-        new_game_id = GameCatalog.__generate_game_id(title, platform)
+        new_game_id = GameCatalog._generate_game_id(title, platform)
         #TODO: надо ли делать выход через исключение?
         # Если игра есть, ошибка
         game_info = self.get_game(new_game_id)
@@ -306,7 +308,7 @@ class GameCatalog:
         else:
             platform = edited_game['platform']
         if need_new_id:
-            updates['game_id'] = GameCatalog.__generate_game_id(title, platform)
+            updates['game_id'] = GameCatalog._generate_game_id(title, platform)
         
         # TODO: собрать в один запрос
         with self.connection.cursor() as cursor:
