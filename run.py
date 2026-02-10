@@ -5,15 +5,27 @@ CONNECTION_STRING = "dbname=gamesdb user=postgres password=postgresPaseu host=lo
 
 def add_game_cli(catalog):
     print("Введите данные игры: ")
-    title = input("Название: ")
-    platform = input("Платформа: ")
-    release_date = input("Дата выхода: ")
+    title = ''
+    while not title:
+        title = input("Название: ").strip()
+    platform = ''
+    while not platform:
+        platform = input("Платформа: ").strip()
+    release_date = ''
+    while not release_date:
+        release_date = input("Дата выхода: ").strip()
     genres = []
-    genres_str = input("Укажите жанры через запятую с пробелом:\n")
+    genres_str = input("Укажите жанры через запятую с пробелом:\n").strip()
     genres = genres_str.split(", ")
-    status = input("Статус добавленной игры: ")
+    status = ''
+    while not status:
+        status = input("Статус добавленной игры: ").strip()
     notes = input("Комментарий: ")
-    add_result = catalog.add_game(title, platform, release_date, genres, status, notes)
+    try:
+        add_result = catalog.add_game(title, platform, release_date, genres, status, notes)
+    except Exception as e:
+        print(e)
+        return
     if add_result[0]:
         print(f"\nИгра успешно добавлена с ID {add_result[1]}")
     else:
@@ -31,7 +43,7 @@ def get_game_cli(catalog):
         print(f"{k.title()}: {v}")
     return id
     
-
+# TODO: переделать
 def update_genres_cli():
     match input("1. Добавить жанры\n"
                 "2. Удалить жанры\n"
@@ -81,7 +93,11 @@ def update_game_cli(catalog):
     for k in list(new_data):
         if not new_data[k]: del new_data[k]
     #print(new_data)
-    id = catalog.update_game(id, new_data)
+    try:
+        id = catalog.update_game(id, new_data)
+    except Exception as e:
+        print(e)
+        return
     print(f"Данные игры с ID {id} обновлены.")
 
 
@@ -100,8 +116,8 @@ def show_all_games(catalog):
         print("Список пуст.")
         return
     print("\nВсе игры в каталоге:")
-    for game_id, game in all_games_dict.items():
-        print(f"{game_id:>15} - {game.title}")
+    for game_id, game_title in all_games_dict.items():
+        print(f"{game_id:>15} - {game_title}")
 
 
 def load_interface(catalog):
