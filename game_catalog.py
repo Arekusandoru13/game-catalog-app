@@ -1,4 +1,3 @@
-import json
 import psycopg
 import re
 
@@ -214,41 +213,6 @@ class GameCatalog:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
         print('connection closed')
-
-
-
-    # Работа с файлом
-    def load_from_file(self, path):
-        try:
-            with open(path, "r") as file:
-                imported_catalog = json.load(file)
-                for game_dict in imported_catalog.values():
-                    self.add_game(game_dict.get("title"),
-                                  game_dict.get("platform"),
-                                  game_dict.get("release_date"),
-                                  game_dict.get("genres"),
-                                  game_dict.get("status"),
-                                  game_dict.get("notes"))
-        except FileNotFoundError as e:
-            raise e
-        
-    def save_to_file(self, path):
-        try:
-            with open(path, "w") as file:
-                json.dump(self._game_catalog_serializer(),
-                                                file,
-                                                indent=2)
-        except Exception as e:
-            raise e
-        
-
-    # Преобразуем данные в словари и списки для сохранения в json
-    def _game_catalog_serializer(self):
-        serialized_dict = {}
-        for id, game in self.__game_catalog.items():
-            serialized_dict[id] = game.info()
-            serialized_dict[id]["genres"] = list(serialized_dict[id]["genres"])
-        return serialized_dict
     
 
     # Генерируем ID из названия, используя только первую букву, согласные и цифры.
@@ -270,17 +234,6 @@ class GameCatalog:
             or letter.isdigit()):
                 new_id = new_id + letter
         return new_id
-
-
-    # Изменяет id уже имеющейся игры
-    def _change_game_id(self, game_id):
-        edited_game = self.__game_catalog.pop(game_id)
-        new_game_id = self._generate_game_id(edited_game.title, edited_game.platform)
-        self.__game_catalog[new_game_id] = edited_game
-
-
-    def check_game_existence(self, game_id):
-        pass
 
 
     def add_game(self, title: str, platform: str, release_date: str, 
@@ -443,10 +396,3 @@ class GameCatalog:
             for game_id, title in cursor:
                 all_games_dict[game_id] = title
         return all_games_dict
-
-
-    # Свойство для получения полного списка (может быть медленным) (obsolete)
-    @property
-    def game_catalog(self):
-        return self.__game_catalog.copy()
-
