@@ -5,6 +5,22 @@ import re
 
 # Класс "Игра в общем смысле"
 class Game:
+    """
+    Класс Game хранит базовую информацию об игре.
+
+    Свойства:
+        title (str): название игры
+        platform (str): платформа, на которой выходит игра
+        release_date (str): дата выхода в формате YYYY.MM.DD или YYYY.qN
+        genres (set[str]): список жанров
+
+    Ограничения:
+        - длина title ограничена
+        - длина platform ограничена
+        - длина одного жанра в genres ограничена
+        - release_date должна быть в одном из поддерживаемых форматов
+    """
+
     # ограничения для соответствия ограничениям в БД
     MAX_TITLE_LENGTH = 30
     MAX_PLATFORM_LENGTH = 15
@@ -17,15 +33,22 @@ class Game:
     ]
 
     
-    def __init__(self, title, platform, release_date, genres):
+    def __init__(self, title: str, platform: str, release_date: str, genres: list[str]):
+        """
+        Создаёт объект Game с базовой информацией об игре.
+
+        Все входные данные проходят базовую валидацию.
+        """
         self.title = title
         self.platform = platform
         self.release_date = release_date
-        self.genres = genres
+        self.genres = genres    # внутри хранится как множество
 
     
     @property
-    def title(self): return self.__title
+    def title(self) -> str:
+        """Название игры."""
+        return self.__title
     @title.setter
     def title(self, title):
         title = title.strip()
@@ -37,7 +60,9 @@ class Game:
         
     
     @property
-    def platform(self): return self.__platform
+    def platform(self) -> str:
+        """Платформа выхода игры."""
+        return self.__platform
     @platform.setter
     def platform(self, platform):
         platform = platform.strip()
@@ -49,12 +74,14 @@ class Game:
         
 
     @classmethod
-    def _is_valid_date(cls, date_str):
+    def _is_valid_date(cls, date_str: str) -> bool:
         return any(re.match(p, date_str) for p in cls.DATE_PATTERNS)
 
 
     @property
-    def release_date(self): return self.__release_date
+    def release_date(self) -> str:
+        """Дата выхода игры."""
+        return self.__release_date
     @release_date.setter
     def release_date(self, release_date):
         release_date = release_date.strip()
@@ -65,7 +92,9 @@ class Game:
 
 
     @property
-    def genres(self): return self.__genres
+    def genres(self) -> set[str]:
+        """Набор жанров игры."""
+        return self.__genres
     @genres.setter
     def genres(self, genres):
         set_of_genres = set()
@@ -76,7 +105,8 @@ class Game:
         
 
 
-    def info(self):
+    def info(self) -> dict:
+        """Возвращает данные игры в виде словаря."""
         return {
             "title": self.title,
             "platform": self.platform,
@@ -86,10 +116,10 @@ class Game:
     
 
     # TODO: Проверки и список допустимых жанров
-    def add_genres(self, genres): 
+    def add_genres(self, genres: list[str]): 
         self.genres = self.genres.union(set(genres))
 
-    def delete_genres(self, genres):
+    def delete_genres(self, genres: list[str]):
         self.genres = self.genres.difference(set(genres))
 
     def clear_genres(self):
@@ -97,19 +127,42 @@ class Game:
     
 
 
-# TODO: Класс "Игра в каталоге игр", список допустимых статусов, список допустимых жанров и проверки этого
 class GameInList(Game):
-    
+    """
+    Класс GameInList хранит информацию об игре как объекте каталога игр.
+
+    Наследует базовые данные игры из Game и дополняет их состоянием
+    и комментарием.
+
+    Дополнительные свойства:
+        status (str): статус игры в каталоге
+        comment (str): комментарий к игре
+
+    Ограничения:
+        - status может быть только одним из допустимых значений
+    """
+
+
     VALID_STATUSES = {'Wishlist', 'Backlog', 'Playing', 'Paused', 'Finished', 'Dropped'}
 
-    def __init__(self, title, platform, release_date, genres, status, comment):
+    def __init__(self, title: str, platform: str, release_date: str,
+                 genres: list[str], status: str, comment: str):
+        """
+        Создаёт объект GameInList представляющий игру в каталоге игр
+        с актуальными данными. Расширяет конструктор Game новыми свойствами.
+
+        Дополнительное свойство status также проходит валидацию.
+        Свойство comment может содержать любой текст.
+        """
         super().__init__(title, platform, release_date, genres)
         self.status = status
         self.comment = comment
 
 
     @property
-    def status(self): return self.__status
+    def status(self) -> str:
+        """Текущий статус игры в каталоге."""
+        return self.__status
     @status.setter
     def status(self, status):
         status = status.strip()
@@ -120,13 +173,16 @@ class GameInList(Game):
         
     
     @property
-    def comment(self): return self.__comment
+    def comment(self) -> str:
+        """Комментарий к игре."""
+        return self.__comment
     @comment.setter
     def comment(self, comment):
         self.__comment = comment
 
 
-    def info(self):
+    def info(self) -> dict:
+        """Возвращает данные игры в каталоге в виде словаря."""
         info_dict = super().info()
         info_dict["status"] = self.status
         info_dict["notes"] = self.comment
@@ -136,7 +192,16 @@ class GameInList(Game):
 
 # Класс "Каталог игр"
 class GameCatalog:
+    """
+    Класс GameCatalog управляет добавлением и извлечением данных о играх
+    из каталога. Позволяет добавить, удалить, прочитать и обновить данные
+    об игре в каталоге.
+    """
     def __init__(self, connection_string):
+        """
+        Создаёт объект GameCatalog, принимает строку с параметрами 
+        для установки соединения с БД.
+        """
         self.__connection_string = connection_string
 
 
@@ -218,11 +283,27 @@ class GameCatalog:
         pass
 
 
-    # Добавляет игру. Возвращает код операции и game_id
-    def add_game(self, title, platform, release_date, genres, status="Wishlist", comment=""):
-        # Генерируем ID
+    def add_game(self, title: str, platform: str, release_date: str, 
+                 genres: list[str], status="Wishlist", comment="") -> tuple[int, str]:
+        """
+        Добавляет игру с указанными параметрами в каталог.
+
+        Аргументы:
+            title (str): название игры
+            platform (str): название платформы
+            release_date (str): дата релиза
+            genres (list[str]): список жанров игры
+            status (str): статус в каталоге, необязательный параметр,
+                по умолчанию Wishlist
+            comment (str): комментарий к игре, необязательный параметр,
+                по умолчанию пустая строка
+
+        Возвращает:
+            tuple[int, str] - код операции и id новой игры
+        """
+
         new_game_id = GameCatalog._generate_game_id(title, platform)
-        #TODO: надо ли делать выход через исключение?
+        #TODO: выход через исключение?
         # Если игра есть, ошибка
         game_info = self.get_game(new_game_id)
         if game_info:
@@ -244,8 +325,10 @@ class GameCatalog:
         return (1, new_game_id)
 
 
-    # Возвращает словарь с данными об игре
-    def get_game(self, game_id):
+    def get_game(self, game_id: str) -> dict:
+        """
+        Извлекает данные игры из каталога по её game_id в виде словаря.
+        """
         with self.connection.cursor() as cursor:
             cursor.execute('''
                 SELECT title, platform, release_date, genres, status, notes
@@ -260,7 +343,11 @@ class GameCatalog:
 
 
     # Удаляет игру с указанным ID, возвращает словарь с данными удалённой игры
-    def delete_game(self, game_id):
+    def delete_game(self, game_id: str) -> dict:
+        """
+        Удаляет игру с указанным game_id из каталога, возвращает её данные
+        в виде словаря.
+        """
         game_info = self.get_game(game_id)
         if not game_info:
             raise Exception("Нет такой игры.")
@@ -280,7 +367,24 @@ class GameCatalog:
 
     # принимает ID игры и словарь с полями для обновления
     # TODO: при обновлении названия и платформы сгенерировать новый ID
-    def update_game(self, game_id, new_data):
+    def update_game(self, game_id: str, new_data: dict) -> int|str:
+        """
+        Обновляет данные игры.
+
+        Аргументы:
+            game_id (str): ID игры, данные которой нужно обновить
+            new_data (dict): словарь с новыми данными
+
+        Возвращает:
+            0 - если данные обновить не удалось
+            str - актуальный ID изменяемой игры
+
+        Выбрасывает:
+            Exception - если игры с указанным ID нет в каталоге
+
+        TODO: Привести возвращаемое значение к одному виду,
+        все ошибки обрабатывать через исключения.
+        """
         edited_game = self.get_game(game_id)
         if not edited_game:
             raise Exception("Нет такой игры.")
@@ -324,7 +428,11 @@ class GameCatalog:
         else: return game_id
 
 
-    def get_all_games(self):
+    def get_all_games(self) -> dict:
+        """
+        Получает список всех игр в каталоге в виде словаря
+        вида [game_id: title].
+        """
         with self.connection.cursor() as cursor:
             cursor.execute('''
                 SELECT game_id, title
