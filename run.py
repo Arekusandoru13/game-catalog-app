@@ -117,7 +117,7 @@ def show_all_games(catalog):
         return
     print("\nВсе игры в каталоге:")
     for game_id, game_title in all_games_dict.items():
-        print(f"{game_id:>15} - {game_title}")
+        print(f"{game_id:>30} - {game_title}")
 
 
 def load_interface(catalog):
