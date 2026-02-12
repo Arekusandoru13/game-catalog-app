@@ -18,6 +18,8 @@ class Game:
         - длина platform ограничена
         - длина одного жанра в genres ограничена
         - release_date должна быть в одном из поддерживаемых форматов
+        - жанры должны быть из списка допустимых жанров, в противном случае
+          жанр будет проигнорирован при добавлении (нестрогая валидация)
     """
 
     # ограничения для соответствия ограничениям в БД
@@ -30,6 +32,13 @@ class Game:
         r"^\d{4}\.xx\.xx$",         # YYYY.xx.xx
         r"^\d{4}\.q[1-4]$"          # YYYY.q1
     ]
+    VALID_GENRES = {
+        "Action", "Platformer", "Fighting", "Adventure", "Shooter",
+        "Beat 'em up", "Shoot 'em up", "Survival", "Horror", "RPG",
+        "Online", "Metroidvania", "Soulslike", "Slasher", "Visual novel",
+        "Interactive movie", "Puzzle", "Quest", "JRPG", "Roguelike",
+        "Simulation", "Strategy", "Racing", "Music", "Unique"
+    }
 
     
     def __init__(self, title: str, platform: str, release_date: str, genres: list[str]):
@@ -93,13 +102,14 @@ class Game:
     @property
     def genres(self) -> set[str]:
         """Набор жанров игры."""
-        return self.__genres
+        return self.__genres.copy()
     @genres.setter
     def genres(self, genres):
         set_of_genres = set()
         for genre in genres:
-            if genre:
-                set_of_genres.add(genre.strip())
+            genre = genre.strip()
+            if genre in Game.VALID_GENRES:
+                set_of_genres.add(genre)
         self.__genres = set_of_genres
         
 
@@ -118,7 +128,7 @@ class Game:
     def add_genres(self, genres: list[str]): 
         self.genres = self.genres.union(set(genres))
 
-    def delete_genres(self, genres: list[str]):
+    def remove_genres(self, genres: list[str]):
         self.genres = self.genres.difference(set(genres))
 
     def clear_genres(self):
@@ -256,7 +266,8 @@ class GameCatalog:
         """
 
         new_game_id = GameCatalog._generate_game_id(title, platform)
-        #TODO: выход через исключение?
+        # TODO: выход через исключение
+        # TODO: специальные исключения для моего класса
         # Если игра есть, ошибка
         game_info = self.get_game(new_game_id)
         if game_info:
@@ -277,7 +288,7 @@ class GameCatalog:
             self.connection.commit()
         return (1, new_game_id)
 
-
+    # TODO: переделать возвращаемое значение на объект GameInList
     def get_game(self, game_id: str) -> dict:
         """
         Извлекает данные игры из каталога по её game_id в виде словаря.
@@ -295,7 +306,6 @@ class GameCatalog:
             return game.info()
 
 
-    # Удаляет игру с указанным ID, возвращает словарь с данными удалённой игры
     def delete_game(self, game_id: str) -> dict:
         """
         Удаляет игру с указанным game_id из каталога, возвращает её данные
@@ -314,19 +324,20 @@ class GameCatalog:
 
         return game_info
 
-
+# TODO: реализовать
     def update_genres(old_genres_list, genres_operations_dict):
         pass
 
-    # принимает ID игры и словарь с полями для обновления
+
     # TODO: при обновлении названия и платформы сгенерировать новый ID
+    # TODO: привести к единообразному виду исключения
     def update_game(self, game_id: str, new_data: dict) -> int|str:
         """
         Обновляет данные игры.
 
         Аргументы:
             game_id (str): ID игры, данные которой нужно обновить
-            new_data (dict): словарь с новыми данными
+            new_data (dict): словарь с необходимыми для обновления полями
 
         Возвращает:
             0 - если данные обновить не удалось
