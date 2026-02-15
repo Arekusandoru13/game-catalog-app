@@ -312,9 +312,9 @@ class GameCatalog:
         Удаляет игру с указанным game_id из каталога, возвращает её данные
         в виде словаря.
         """
-        game_info = self.get_game(game_id)
-        if not game_info:
-            raise Exception("Нет такой игры.")
+        game = self.get_game(game_id)
+        if not game:
+            raise GameNotFoundError(game_id)
         
         query = (t'''
             DELETE FROM game_catalog WHERE game_id={game_id};
@@ -323,7 +323,7 @@ class GameCatalog:
             cursor.execute(query)
             self.connection.commit()
 
-        return game_info
+        return game.info()
 
 # TODO: реализовать
     def update_genres(old_genres_list, genres_operations_dict):
