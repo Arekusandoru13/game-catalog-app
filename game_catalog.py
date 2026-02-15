@@ -285,10 +285,14 @@ class GameCatalog:
             self.connection.commit()
         return (1, new_game_id)
 
-    # TODO: переделать возвращаемое значение на объект GameInList
-    def get_game(self, game_id: str) -> dict:
+
+    def get_game(self, game_id: str) -> GameInList | None:
         """
-        Извлекает данные игры из каталога по её game_id в виде словаря.
+        Извлекает данные игры из каталога по её game_id.
+
+        Возвращает:
+            GameInList - если игра найдена
+            None - если игра отсутствует
         """
         with self.connection.cursor() as cursor:
             cursor.execute('''
@@ -300,7 +304,7 @@ class GameCatalog:
                 return None
             title, platform, release_date, genres, status, commentary = cursor.fetchone()
             game = GameInList(title, platform, release_date, genres, status, commentary)
-            return game.info()
+            return game
 
 
     def delete_game(self, game_id: str) -> dict:
