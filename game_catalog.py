@@ -1,5 +1,6 @@
 import psycopg
 import re
+from game_catalog_exc import *
 
 
 # Класс "Игра в общем смысле"
@@ -258,15 +259,16 @@ class GameCatalog:
 
         Возвращает:
             tuple[int, str] - код операции и id новой игры
+
+        Выбрасывает:
+            GameExistsError - если игра с получившимся ID существует
         """
 
         new_game_id = GameCatalog._generate_game_id(title, platform)
-        # TODO: выход через исключение
-        # TODO: специальные исключения для моего класса
-        # Если игра есть, ошибка
-        game_info = self.get_game(new_game_id)
-        if game_info:
-            return (0, new_game_id)
+        game_exists = self.get_game(new_game_id)
+        if game_exists:
+            raise GameExistsError(new_game_id)
+        
         # Создаём объект Game и добавляем в каталог
         try:
             new_game = GameInList(title, platform, release_date, genres, status, comment)
