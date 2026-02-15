@@ -350,9 +350,9 @@ class GameCatalog:
         TODO: Привести возвращаемое значение к одному виду,
         все ошибки обрабатывать через исключения.
         """
-        edited_game = self.get_game(game_id)
+        edited_game = self.get_game(game_id).info()
         if not edited_game:
-            raise Exception("Нет такой игры.")
+            raise GameNotFoundError(game_id)
         # Собираем подходящие данные, которые нужно обновить
         updates = dict()
         for k in edited_game:
