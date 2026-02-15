@@ -121,7 +121,6 @@ class Game:
         }
     
 
-    # TODO: Проверки и список допустимых жанров
     def add_genres(self, genres: list[str]): 
         self.genres = self.genres.union(set(genres))
 
@@ -243,7 +242,7 @@ class GameCatalog:
 
 
     def add_game(self, title: str, platform: str, release_date: str, 
-                 genres: list[str], status="Wishlist", comment="") -> tuple[int, str]:
+                 genres: list[str], status="wishlist", comment="") -> tuple[int, str]:
         """
         Добавляет игру с указанными параметрами в каталог.
 
