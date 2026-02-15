@@ -171,7 +171,6 @@ class GameInList(Game):
         return self.__status
     @status.setter
     def status(self, status):
-        status = status.strip()
         if status in self.VALID_STATUSES:
             self.__status = status
         else:
