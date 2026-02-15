@@ -18,8 +18,7 @@ class Game:
         - длина platform ограничена
         - длина одного жанра в genres ограничена
         - release_date должна быть в одном из поддерживаемых форматов
-        - жанры должны быть из списка допустимых жанров, в противном случае
-          жанр будет проигнорирован при добавлении (нестрогая валидация)
+        - жанры должны быть из списка допустимых жанров
     """
 
     # ограничения для соответствия ограничениям в БД
@@ -33,11 +32,11 @@ class Game:
         r"^\d{4}\.q[1-4]$"          # YYYY.q1
     ]
     VALID_GENRES = {
-        "Action", "Platformer", "Fighting", "Adventure", "Shooter",
-        "Beat 'em up", "Shoot 'em up", "Survival", "Horror", "RPG",
-        "Online", "Metroidvania", "Soulslike", "Slasher", "Visual novel",
-        "Interactive movie", "Puzzle", "Quest", "JRPG", "Roguelike",
-        "Simulation", "Strategy", "Racing", "Music", "Unique"
+        "action", "platformer", "fighting", "adventure", "shooter",
+        "beat 'em up", "shoot 'em up", "survival", "horror", "rpg",
+        "online", "metroidvania", "soulslike", "slasher", "visual novel",
+        "interactive movie", "puzzle", "quest", "jrpg", "roguelike",
+        "simulation", "strategy", "racing", "music", "unique"
     }
 
     
@@ -59,7 +58,6 @@ class Game:
         return self.__title
     @title.setter
     def title(self, title):
-        title = title.strip()
         if len(title) > self.MAX_TITLE_LENGTH:
             raise ValueError("Название игры слишком длинное.")
         if not title:
@@ -73,7 +71,6 @@ class Game:
         return self.__platform
     @platform.setter
     def platform(self, platform):
-        platform = platform.strip()
         if len(platform) > self.MAX_PLATFORM_LENGTH:
             raise ValueError("Название платформы слишком длинное.")
         if not platform:
@@ -92,7 +89,6 @@ class Game:
         return self.__release_date
     @release_date.setter
     def release_date(self, release_date):
-        release_date = release_date.strip()
         if self._is_valid_date(release_date):
             self.__release_date = release_date
         else:
@@ -107,9 +103,10 @@ class Game:
     def genres(self, genres):
         set_of_genres = set()
         for genre in genres:
-            genre = genre.strip()
             if genre in Game.VALID_GENRES:
                 set_of_genres.add(genre)
+            else:
+                raise ValueError(f"Жанр {genre} отсутствует в списке допустимых жанров.")
         self.__genres = set_of_genres
         
 
@@ -152,7 +149,7 @@ class GameInList(Game):
     """
 
 
-    VALID_STATUSES = {'Wishlist', 'Backlog', 'Playing', 'Paused', 'Finished', 'Dropped'}
+    VALID_STATUSES = {'wishlist', 'backlog', 'playing', 'paused', 'completed', 'dropped'}
 
     def __init__(self, title: str, platform: str, release_date: str,
                  genres: list[str], status: str, comment: str):
