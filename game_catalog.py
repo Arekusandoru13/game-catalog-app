@@ -124,7 +124,7 @@ class Game:
 
     def add_genres(self, genres: list[str]): 
         self.genres = self.genres.union(set(genres))
-
+    #TODO: строгое удаление
     def remove_genres(self, genres: list[str]):
         self.genres = self.genres.difference(set(genres))
 
@@ -326,8 +326,25 @@ class GameCatalog:
         return game.info()
 
 # TODO: реализовать
-    def update_genres(old_genres_list, genres_operations_dict):
-        pass
+    @staticmethod
+    def _update_genres(game: GameInList, genres_operations: dict):
+        """
+        Обновляет жанры у объекта GameInList согласно словарю.
+        
+        Аргументы:
+            game (GameInList): игра, у которой нужно обновить данные
+            genres_operations (dict): словарь с данными для обновления,
+                может содержать ключи add и remove, внутри которых
+                необходимые жанры для добавления и удаления, при наличии ключа
+                clear словарь очищается
+        """
+        if "remove" in genres_operations:
+            game.remove_genres(genres_operations["remove"])
+        if "clear" in genres_operations:
+            game.clear_genres()
+        if "add" in genres_operations:
+            game.add_genres(genres_operations["add"])
+
 
 
     # TODO: при обновлении названия и платформы сгенерировать новый ID
@@ -350,12 +367,13 @@ class GameCatalog:
         TODO: Привести возвращаемое значение к одному виду,
         все ошибки обрабатывать через исключения.
         """
-        edited_game = self.get_game(game_id).info()
+        edited_game = self.get_game(game_id)
         if not edited_game:
             raise GameNotFoundError(game_id)
+        edited_game_info = edited_game.info()
         # Собираем подходящие данные, которые нужно обновить
         updates = dict()
-        for k in edited_game:
+        for k in edited_game_info:
             if k in new_data:
                 updates[k] = new_data[k]
         # Если данных для обновления нет или передали косячный new_data - выходим
@@ -363,7 +381,8 @@ class GameCatalog:
             return 0
         # Форматируем список жанров
         if 'genres' in updates:
-            updates['genres'] = GameCatalog.update_genres(edited_game['genres'], updates['genres'])
+            GameCatalog._update_genres(edited_game, updates['genres'])
+            updates['genres'] = list(edited_game.genres)
         # Надо обновить game_id?
         need_new_id = False
         if 'title' in updates:
