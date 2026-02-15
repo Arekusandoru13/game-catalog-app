@@ -104,6 +104,7 @@ class Game:
     def genres(self, genres):
         set_of_genres = set()
         for genre in genres:
+            genre = genre.lower()
             if genre in Game.VALID_GENRES:
                 set_of_genres.add(genre)
             else:
@@ -389,12 +390,12 @@ class GameCatalog:
             title = updates['title']
             need_new_id = True
         else:
-            title = edited_game["title"]
+            title = edited_game_info["title"]
         if 'platform' in updates:
             platform = updates['platform']
             need_new_id = True
         else:
-            platform = edited_game['platform']
+            platform = edited_game_info['platform']
         if need_new_id:
             updates['game_id'] = GameCatalog._generate_game_id(title, platform)
         

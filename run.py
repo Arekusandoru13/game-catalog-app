@@ -35,7 +35,7 @@ def add_game_cli(catalog):
 def get_game_cli(catalog):
     id = input("Введите ID игры: ")
     try:
-        game_data = catalog.get_game(id)
+        game_data = catalog.get_game(id).info()
     except Exception as e:
         print(e)
         return
@@ -49,7 +49,7 @@ def update_genres_cli():
                 "2. Удалить жанры\n"
                 "3. Очистить жанры\n"):
         case "1": key = "add"
-        case "2": key = "delete"
+        case "2": key = "remove"
         case "3": return "clear"
         case _: print("Некорректный ввод."); return
 
