@@ -50,7 +50,7 @@ class Game:
         "game boy advande",
         "xbox 360", "ps3", "wii",
         "ds", "psp"
-        "wii u", "ps4" "xbox one", "switch",
+        "wii u", "ps4", "xbox one", "switch",
         "3ds", "ps vita"
         "xbox series", "ps5", "switch 2"
     }
@@ -133,7 +133,6 @@ class Game:
         Аргументы:
             genres (list[str]): список жанров для добавления
         """
-        
         set_of_genres = set()
         for genre in genres:
             genre = genre.lower()
@@ -142,15 +141,14 @@ class Game:
             else:
                 raise ValueError(f"Жанр {genre} отсутствует в списке допустимых жанров.")
         self.__genres = set_of_genres
-        #self.genres = self.genres.union(set(genres))
 
-        
+
     #TODO: строгое удаление
     def remove_genres(self, genres: list[str]):
         self.genres = self.genres.difference(set(genres))
 
     def clear_genres(self):
-        self.genres.clear()
+        self.__genres.clear()
     
 
 
