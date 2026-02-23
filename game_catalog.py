@@ -65,7 +65,8 @@ class Game:
         self.title = title
         self.platform = platform
         self.release_date = release_date
-        self.add_genres(genres)    # внутри хранится как множество
+        self.__genres = set()
+        self.add_genres(genres)
 
     
     @property
@@ -132,22 +133,43 @@ class Game:
 
         Аргументы:
             genres (list[str]): список жанров для добавления
+
+        Выбрасывает:
+            ValueError - если один или несколько добавляемых жанров отсутствуют
+                в списке допустимых жанров
         """
-        set_of_genres = set()
-        for genre in genres:
-            genre = genre.lower()
-            if genre in Game.VALID_GENRES:
-                set_of_genres.add(genre)
-            else:
-                raise ValueError(f"Жанр {genre} отсутствует в списке допустимых жанров.")
-        self.__genres = set_of_genres
+        set_of_genres = set(genres)
+        invalid_genres = set_of_genres - self.VALID_GENRES
+        if invalid_genres:
+            raise ValueError(f"Жанры {invalid_genres} отсутствуют в списке допустимых жанров.")
+        self.__genres = self.__genres.union(set_of_genres)
 
 
-    #TODO: строгое удаление
     def remove_genres(self, genres: list[str]):
-        self.genres = self.genres.difference(set(genres))
+        """
+        Удаляет жанры в игре.
+
+        Аргументы:
+            genres (list[str]): список жанров для удаления
+
+        Выбрасывает:
+            ValueError - если один или несколько удаляемых жанров отсутствуют
+                в списке допустимых жанров
+            KeyError - если один или несколько удаляемых жанров отсутствуют
+                в списке жанров данной игры
+        """
+        set_of_genres = set(genres)
+        invalid_genres = set_of_genres - self.VALID_GENRES
+        if invalid_genres:
+            raise ValueError(f"Жанры {invalid_genres} отсутствуют в списке допустимых жанров.")
+        filtered_genres = set_of_genres - self.genres
+        if filtered_genres:
+            raise KeyError(f"Жанры {filtered_genres} не относятся к этой игре.")
+        self.__genres = self.genres.difference(set_of_genres)
+
 
     def clear_genres(self):
+        """Очищает список жанров в данной игре."""
         self.__genres.clear()
     
 
