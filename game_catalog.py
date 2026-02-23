@@ -20,11 +20,11 @@ class Game:
         - длина одного жанра в genres ограничена
         - release_date должна быть в одном из поддерживаемых форматов
         - жанры должны быть из списка допустимых жанров
+        - платформа должна быть из списка допустимых платформ
     """
 
     # ограничения для соответствия ограничениям в БД
     MAX_TITLE_LENGTH = 30
-    MAX_PLATFORM_LENGTH = 15
     MAX_GENRE_LENGTH = 15
     DATE_PATTERNS = [
         r"^\d{4}\.\d{2}\.\d{2}$",   # YYYY.MM.DD
@@ -39,6 +39,21 @@ class Game:
         "interactive movie", "puzzle", "quest", "jrpg", "roguelike",
         "simulation", "strategy", "racing", "music", "unique"
     }
+    VALID_PLATFORMS = {
+        "pc",
+        "dendy", "famicom", "master system",
+        "mega drive", "super famicom",
+        "game boy", "game gear",
+        "saturn", "ps1", "nintendo 64",
+        "game boy color",
+        "dreamcast", "ps2", "gamecube", "xbox",
+        "game boy advande",
+        "xbox 360", "ps3", "wii",
+        "ds", "psp"
+        "wii u", "ps4" "xbox one", "switch",
+        "3ds", "ps vita"
+        "xbox series", "ps5", "switch 2"
+    }
 
     
     def __init__(self, title: str, platform: str, release_date: str, genres: list[str]):
@@ -50,7 +65,7 @@ class Game:
         self.title = title
         self.platform = platform
         self.release_date = release_date
-        self.genres = genres    # внутри хранится как множество
+        self.add_genres(genres)    # внутри хранится как множество
 
     
     @property
@@ -72,10 +87,8 @@ class Game:
         return self.__platform
     @platform.setter
     def platform(self, platform):
-        if len(platform) > self.MAX_PLATFORM_LENGTH:
-            raise ValueError("Название платформы слишком длинное.")
-        if not platform:
-            raise ValueError("Платформа не может быть пустой.")
+        if platform not in Game.VALID_PLATFORMS:
+            raise ValueError("Недопустимая платформа.")
         self.__platform = platform
         
 
@@ -100,16 +113,6 @@ class Game:
     def genres(self) -> set[str]:
         """Набор жанров игры."""
         return self.__genres.copy()
-    @genres.setter
-    def genres(self, genres):
-        set_of_genres = set()
-        for genre in genres:
-            genre = genre.lower()
-            if genre in Game.VALID_GENRES:
-                set_of_genres.add(genre)
-            else:
-                raise ValueError(f"Жанр {genre} отсутствует в списке допустимых жанров.")
-        self.__genres = set_of_genres
         
 
 
@@ -123,8 +126,25 @@ class Game:
         }
     
 
-    def add_genres(self, genres: list[str]): 
-        self.genres = self.genres.union(set(genres))
+    def add_genres(self, genres: list[str]) -> set[str]: 
+        """
+        Добавляет жанры к игре.
+
+        Аргументы:
+            genres (list[str]): список жанров для добавления
+        """
+        
+        set_of_genres = set()
+        for genre in genres:
+            genre = genre.lower()
+            if genre in Game.VALID_GENRES:
+                set_of_genres.add(genre)
+            else:
+                raise ValueError(f"Жанр {genre} отсутствует в списке допустимых жанров.")
+        self.__genres = set_of_genres
+        #self.genres = self.genres.union(set(genres))
+
+        
     #TODO: строгое удаление
     def remove_genres(self, genres: list[str]):
         self.genres = self.genres.difference(set(genres))
