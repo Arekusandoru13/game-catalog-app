@@ -345,10 +345,10 @@ class GameCatalog:
             return game
 
 
-    def delete_game(self, game_id: str) -> dict:
+    def delete_game(self, game_id: str) -> GameInList:
         """
         Удаляет игру с указанным game_id из каталога, возвращает её данные
-        в виде словаря.
+        в виде объекта GameInList.
         """
         game = self.get_game(game_id)
         if not game:
@@ -361,7 +361,7 @@ class GameCatalog:
             cursor.execute(query)
             self.connection.commit()
 
-        return game.info()
+        return game
 
 # TODO: реализовать
     @staticmethod
