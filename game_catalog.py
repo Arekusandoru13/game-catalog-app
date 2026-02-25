@@ -284,7 +284,7 @@ class GameCatalog:
 
 
     def add_game(self, title: str, platform: str, release_date: str, 
-                 genres: list[str], status="wishlist", comment="") -> tuple[int, str]:
+                 genres: list[str], status="wishlist", comment="") -> str:
         """
         Добавляет игру с указанными параметрами в каталог.
 
@@ -299,18 +299,15 @@ class GameCatalog:
                 по умолчанию пустая строка
 
         Возвращает:
-            tuple[int, str] - код операции и id новой игры
+            str - id новой игры
 
         Выбрасывает:
             GameExistsError - если игра с получившимся ID существует
         """
-
         new_game_id = GameCatalog._generate_game_id(title, platform)
         game_exists = self.get_game(new_game_id)
         if game_exists:
             raise GameExistsError(new_game_id)
-        
-        # Создаём объект Game и добавляем в каталог
         try:
             new_game = GameInList(title, platform, release_date, genres, status, comment)
         except Exception as e:
@@ -324,7 +321,7 @@ class GameCatalog:
         with self.connection.cursor() as cursor:
             cursor.execute(query)
             self.connection.commit()
-        return (1, new_game_id)
+        return new_game_id
 
 
     def get_game(self, game_id: str) -> GameInList | None:
