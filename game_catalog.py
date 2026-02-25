@@ -363,7 +363,7 @@ class GameCatalog:
 
         return game
 
-# TODO: реализовать
+
     @staticmethod
     def _update_genres(game: GameInList, genres_operations: dict):
         """
@@ -385,9 +385,7 @@ class GameCatalog:
 
 
 
-    # TODO: при обновлении названия и платформы сгенерировать новый ID
-    # TODO: привести к единообразному виду исключения
-    def update_game(self, game_id: str, new_data: dict) -> int|str:
+    def update_game(self, game_id: str, new_data: dict) -> str:
         """
         Обновляет данные игры.
 
@@ -396,14 +394,11 @@ class GameCatalog:
             new_data (dict): словарь с необходимыми для обновления полями
 
         Возвращает:
-            0 - если данные обновить не удалось
-            str - актуальный ID изменяемой игры
+            '' - если данные обновить не удалось
+            game_id (str) - актуальный ID изменяемой игры
 
         Выбрасывает:
-            Exception - если игры с указанным ID нет в каталоге
-
-        TODO: Привести возвращаемое значение к одному виду,
-        все ошибки обрабатывать через исключения.
+            GameNotFoundError - если игры с указанным ID нет в каталоге
         """
         edited_game = self.get_game(game_id)
         if not edited_game:
@@ -414,9 +409,9 @@ class GameCatalog:
         for k in edited_game_info:
             if k in new_data:
                 updates[k] = new_data[k]
-        # Если данных для обновления нет или передали косячный new_data - выходим
+        # Если данных для обновления нет - выходим
         if not updates:
-            return 0
+            return ''
         # Форматируем список жанров
         if 'genres' in updates:
             GameCatalog._update_genres(edited_game, updates['genres'])
