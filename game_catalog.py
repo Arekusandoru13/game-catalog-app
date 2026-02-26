@@ -403,33 +403,33 @@ class GameCatalog:
         edited_game = self.get_game(game_id)
         if not edited_game:
             raise GameNotFoundError(game_id)
-        edited_game_info = edited_game.info()
-        # Собираем подходящие данные, которые нужно обновить
         updates = dict()
-        for k in edited_game_info:
-            if k in new_data:
-                updates[k] = new_data[k]
-        # Если данных для обновления нет - выходим
+        need_new_id = False
+
+        if 'title' in new_data:
+            edited_game.title = new_data['title']
+            updates['title'] = edited_game.title
+            need_new_id = True
+        if 'platform' in new_data:
+            edited_game.platform = new_data['platform']
+            updates['platform'] = edited_game.platform
+            need_new_id = True
+        if 'release_date' in new_data:
+            edited_game.release_date = new_data['release_date']
+            updates['release_date'] = edited_game.release_date
+        if 'genres' in new_data:
+            GameCatalog._update_genres(edited_game, new_data['genres'])
+            updates['genres'] = list(edited_game.genres)
+        if 'status' in new_data:
+            edited_game.status = new_data['status']
+            updates['status'] = edited_game.status
+        if 'notes' in new_data:
+            updates['notes'] = new_data['notes']
         if not updates:
             return ''
-        # Форматируем список жанров
-        if 'genres' in updates:
-            GameCatalog._update_genres(edited_game, updates['genres'])
-            updates['genres'] = list(edited_game.genres)
-        # Надо обновить game_id?
-        need_new_id = False
-        if 'title' in updates:
-            title = updates['title']
-            need_new_id = True
-        else:
-            title = edited_game_info["title"]
-        if 'platform' in updates:
-            platform = updates['platform']
-            need_new_id = True
-        else:
-            platform = edited_game_info['platform']
+        
         if need_new_id:
-            updates['game_id'] = GameCatalog._generate_game_id(title, platform)
+            updates['game_id'] = GameCatalog._generate_game_id(edited_game.title, edited_game.platform)
         
         # TODO: собрать в один запрос
         with self.connection.cursor() as cursor:
