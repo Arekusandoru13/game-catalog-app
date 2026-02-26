@@ -61,25 +61,27 @@ def add_game_cli(catalog):
     print(f"\nИгра успешно добавлена с ID {adding_result}")
 
 
+# TODO: Исключение если игры нет
 def get_game_cli(catalog):
     id = input("Введите ID игры: ")
     try:
-        game_data = catalog.get_game(id).info()
+        game = catalog.get_game(id)
     except Exception as e:
         print(e)
         return
-    for k, v in game_data.items():
+    game_dict = game.info()
+    for k, v in game_dict.items():
         print(f"{k.title()}: {v}")
     return id
     
-# TODO: переделать
+
 def update_genres_cli():
     match input("1. Добавить жанры\n"
                 "2. Удалить жанры\n"
                 "3. Очистить жанры\n"):
         case "1": key = "add"
         case "2": key = "remove"
-        case "3": return "clear"
+        case "3": return {"clear":''}
         case _: print("Некорректный ввод."); return
 
     genres_str = input("Укажите жанры через запятую с пробелом:\n")
@@ -104,15 +106,15 @@ def update_game_cli(catalog):
                           "+. Применить изменения\n")
         match selection:
             case "1":
-                new_data["title"] = input("Введите новое название: ")
+                new_data["title"] = input("Введите новое название: ").strip()
             case "2":
-                new_data["platform"] = input("Введите новую платформу: ")
+                new_data["platform"] = input("Введите новую платформу: ").strip()
             case "3":
-                new_data["release_date"] = input("Введите новую дату выхода в формате YYYY.MM.DD: ")
+                new_data["release_date"] = input("Введите новую дату выхода в формате YYYY.MM.DD: ").strip()
             case "4":
                 new_data["genres"] = update_genres_cli()
             case "5":
-                new_data["status"] = input("Введите новый статус: ")
+                new_data["status"] = input("Введите новый статус: ").strip()
             case "6":
                 new_data["notes"] = input("Введите новый комментарий:\n")
             case "0": return
@@ -121,7 +123,6 @@ def update_game_cli(catalog):
 
     for k in list(new_data):
         if not new_data[k]: del new_data[k]
-    #print(new_data)
     try:
         id = catalog.update_game(id, new_data)
     except Exception as e:
@@ -137,7 +138,7 @@ def delete_game_cli(catalog):
     except Exception as e:
         print(e)
         return
-    print(f"Игра {game_data['title']} удалена из каталога.\n")
+    print(f"Игра {game_data.title} удалена из каталога.\n")
 
 def show_all_games(catalog):
     all_games_dict = catalog.get_all_games()
@@ -150,6 +151,7 @@ def show_all_games(catalog):
 
 
 def load_interface(catalog):
+    rage = 0
     while True:
         print("\nВыберите действие:\n"
               "1. Добавить игру в каталог.\n"
@@ -159,7 +161,7 @@ def load_interface(catalog):
               "5. Отобразить весь каталог.\n"
               "0. Выход из программы.\n")
         selector = input("Ваш выбор: ")
-
+        
         match selector:
             case "1": add_game_cli(catalog)
             case "2": get_game_cli(catalog)
@@ -167,7 +169,13 @@ def load_interface(catalog):
             case "4": delete_game_cli(catalog)
             case "5": show_all_games(catalog)
             case "0": break
-            case _: print("Неподдерживаемый ввод."); continue
+            case _: 
+                rage += 1
+                if rage < 10:
+                    print("Неподдерживаемый ввод.")
+                else:
+                    print("НУ ТЫ СМОТРИ ЧЁ ЖМЁШЬ-ТО!")
+                continue
 
 
 
