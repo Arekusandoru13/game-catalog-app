@@ -10,26 +10,55 @@ def add_game_cli(catalog):
         title = input("Название: ").strip()
     platform = ''
     while not platform:
-        platform = input("Платформа: ").strip()
+        platform = input("Платформа: ").strip().lower()
+        if platform not in GameInList.VALID_PLATFORMS:
+            print("Данной платформы нет в списке допустимых. " \
+            "Укажите корректную платформу.")
+            platform = ''
     release_date = ''
     while not release_date:
-        release_date = input("Дата выхода: ").strip()
+        release_date = input("Дата выхода: ").strip().lower()
+        if not Game._is_valid_date(release_date):
+            print("Неверный формат даты. " \
+            "Укажите дату в формате yyyy.mm.dd или yyyy.qx.")
+            release_date = ''
     genres = []
-    genres_str = input("Укажите жанры через запятую с пробелом:\n").strip()
-    genres = genres_str.split(", ")
+    while not genres:
+        genres_str = input("Укажите жанры через запятую с пробелом:\n").strip().lower()
+        genres = genres_str.split(", ")
+        for g in genres[:]:
+            if g not in GameInList.VALID_GENRES:
+                genres = []
+                print(f"Жанра {g} нет в списке допустимых жанров. "\
+                      "Укажите только допустимые жанры.")
+                break
     status = ''
     while not status:
-        status = input("Статус добавленной игры: ").strip()
+        print("Статус добавленной игры:\n" \
+        "1 - Wishlist\n" \
+        "2 - Backlog\n" \
+        "3 - Playing\n" \
+        "4 - Paused\n" \
+        "5 - Completed\n" \
+        "6 - Dropped")
+        selection = input().strip()
+        match selection:
+            case "1": status = "wishlist"
+            case "2": status = "backlog"
+            case "3": status = "playing"
+            case "4": status = "paused"
+            case "5": status = "completed"
+            case "6": status = "dropped"
+            case _:
+                print("О, вы особенный...")
+                status = "wishlist"
     notes = input("Комментарий: ")
     try:
-        add_result = catalog.add_game(title, platform, release_date, genres, status, notes)
+        adding_result = catalog.add_game(title, platform, release_date, genres, status, notes)
     except Exception as e:
         print(e)
         return
-    if add_result[0]:
-        print(f"\nИгра успешно добавлена с ID {add_result[1]}")
-    else:
-        print(f"\nТакая игра уже существует с ID {add_result[1]}")
+    print(f"\nИгра успешно добавлена с ID {adding_result}")
 
 
 def get_game_cli(catalog):
