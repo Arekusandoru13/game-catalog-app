@@ -61,7 +61,7 @@ def add_game_cli(catalog):
     print(f"\nИгра успешно добавлена с ID {adding_result}")
 
 
-# TODO: Исключение если игры нет
+
 def get_game_cli(catalog):
     id = input("Введите ID игры: ")
     try:

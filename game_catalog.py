@@ -324,22 +324,25 @@ class GameCatalog:
         return new_game_id
 
 
-    def get_game(self, game_id: str) -> GameInList | None:
+    def get_game(self, game_id: str) -> GameInList:
         """
         Извлекает данные игры из каталога по её game_id.
 
         Возвращает:
             GameInList - если игра найдена
-            None - если игра отсутствует
+            
+        Выбрасывает:
+            GameNotFoundError - если игры с указанным ID нет
         """
         with self.connection.cursor() as cursor:
             cursor.execute('''
                 SELECT title, platform, release_date, genres, status, notes
-                FROM game_catalog WHERE game_id=%s;
+                FROM game_catalog 
+                WHERE game_id=%s;
                 ''', 
                 (game_id,))
             if cursor.rowcount == 0:
-                return None
+                raise GameNotFoundError(game_id)
             title, platform, release_date, genres, status, commentary = cursor.fetchone()
             game = GameInList(title, platform, release_date, genres, status, commentary)
             return game
