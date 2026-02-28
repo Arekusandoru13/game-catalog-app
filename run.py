@@ -1,4 +1,5 @@
 from game_catalog import *
+import shelve
 
 CATALOG_FILENAME = "game_catalog.json"
 CONNECTION_STRING = "dbname=gamesdb user=postgres password=postgresPaseu host=localhost"
@@ -181,8 +182,22 @@ def load_interface(catalog):
 
 def main():
     print("Мой каталог игр.")
-    with GameCatalog(CONNECTION_STRING) as catalog:
-        load_interface(catalog)
+    try:
+        with shelve.open('settings') as settings:
+            connection_str = ('dbname='+settings['dbname']+' '
+                              + 'user='+settings['user']+' '
+                              + 'password='+settings['password']+' '
+                              + 'host='+settings['host'])
+    except KeyError as e:
+        print(e)
+        print('Погоди, не торопись. Запусти setup_db и создай новую бд либо настрой параметры подключения к имеющейся.')
+    try:
+        with GameCatalog(connection_str) as catalog:
+            load_interface(catalog)
+    except psycopg.OperationalError as e:
+        print(e)
+        print("Соединение установить не удалось, обновите данные через setup_db.")
+        return
     
 
 
