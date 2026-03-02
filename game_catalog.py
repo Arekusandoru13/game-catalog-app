@@ -49,10 +49,10 @@ class Game:
         "dreamcast", "ps2", "gamecube", "xbox",
         "game boy advande",
         "xbox 360", "ps3", "wii",
-        "ds", "psp"
+        "ds", "psp",
         "wii u", "ps4", "xbox one", "switch",
-        "3ds", "ps vita"
-        "xbox series", "ps5", "switch 2"
+        "3ds", "ps vita",
+        "xbox series", "ps5", "switch 2",
     }
 
     

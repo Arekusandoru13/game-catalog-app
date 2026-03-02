@@ -85,7 +85,7 @@ def update_genres_cli():
         case "3": return {"clear":''}
         case _: print("Некорректный ввод."); return
 
-    genres_str = input("Укажите жанры через запятую с пробелом:\n")
+    genres_str = input("Укажите жанры через запятую с пробелом:\n").strip().lower()
     genres = genres_str.split(", ")
     return {key: genres}
 
@@ -96,7 +96,7 @@ def update_game_cli(catalog):
 
     new_data = {}
     while True:
-        selection = input("Какие данные нужно обновить?\n"
+        selection = input("\nКакие данные нужно обновить?\n"
                           "1. Название\n"
                           "2. Платформа\n"
                           "3. Дата выхода\n"
@@ -109,13 +109,13 @@ def update_game_cli(catalog):
             case "1":
                 new_data["title"] = input("Введите новое название: ").strip()
             case "2":
-                new_data["platform"] = input("Введите новую платформу: ").strip()
+                new_data["platform"] = input("Введите новую платформу: ").strip().lower()
             case "3":
-                new_data["release_date"] = input("Введите новую дату выхода в формате YYYY.MM.DD: ").strip()
+                new_data["release_date"] = input("Введите новую дату выхода в формате YYYY.MM.DD: ").strip().lower()
             case "4":
                 new_data["genres"] = update_genres_cli()
             case "5":
-                new_data["status"] = input("Введите новый статус: ").strip()
+                new_data["status"] = input("Введите новый статус: ").strip().lower()
             case "6":
                 new_data["notes"] = input("Введите новый комментарий:\n")
             case "0": return
