@@ -253,13 +253,13 @@ class GameCatalog:
 
     def __enter__(self):
         self.connection = psycopg.connect(self.__connection_string)
-        print('connection opened')
+        #print('connection opened')
         return self
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
-        print('connection closed')
+        #print('connection closed')
     
 
     # Генерируем ID из названия, используя только первую букву, согласные и цифры.
@@ -305,7 +305,7 @@ class GameCatalog:
             GameExistsError - если игра с получившимся ID существует
         """
         new_game_id = GameCatalog._generate_game_id(title, platform)
-        game_exists = self.get_game(new_game_id)
+        game_exists = self.check_game_in_catalog(new_game_id)
         if game_exists:
             raise GameExistsError(new_game_id)
         try:
@@ -323,6 +323,27 @@ class GameCatalog:
             self.connection.commit()
         return new_game_id
 
+
+    def check_game_in_catalog(self, game_id: str) -> str:
+        """
+        Проверяет наличие игры в каталоге.
+
+        Возвращает:
+            str - название игры. Если игры в каталоге нет, строка пустая.
+        """
+        with self.connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT title
+                FROM game_catalog 
+                WHERE game_id=%s;
+                ''', 
+                (game_id,))
+            if cursor.rowcount == 0:
+                return ''
+            else:
+                title = cursor.fetchone()
+                return title
+            
 
     def get_game(self, game_id: str) -> GameInList:
         """
