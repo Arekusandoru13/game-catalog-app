@@ -191,6 +191,7 @@ def main():
     except KeyError as e:
         print(e)
         print('Погоди, не торопись. Запусти setup_db и создай новую бд либо настрой параметры подключения к имеющейся.')
+        return
     try:
         with GameCatalog(connection_str) as catalog:
             load_interface(catalog)
