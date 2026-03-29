@@ -47,7 +47,7 @@ class Game:
         "saturn", "ps1", "nintendo 64",
         "game boy color",
         "dreamcast", "ps2", "gamecube", "xbox",
-        "game boy advande",
+        "game boy advance",
         "xbox 360", "ps3", "wii",
         "ds", "psp",
         "wii u", "ps4", "xbox one", "switch",
