@@ -147,6 +147,15 @@ def m1_execute_sql(connection):
         return
 
 
+def m1_done_check(connection):
+    with connection.cursor() as cursor:
+        cursor.execute('''
+SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'migrations')
+                       ''')
+        table_exists = cursor.fetchone()[0]
+        return table_exists
+
+
 
 def migration1():
     print("Это секретное место. Но раз вы открыли сюда дверь, я сбегаю и буду" \
@@ -166,7 +175,11 @@ def migration1():
         return
     try:
         with psycopg.connect(connection_str) as conn:
-            m1_execute_sql(conn)
+            if m1_done_check(conn):
+                print('А всё уже.')
+                return
+            else:
+                m1_execute_sql(conn)
     except Exception as e:
         print(e)
         print("Что-то мне нехорошо...")

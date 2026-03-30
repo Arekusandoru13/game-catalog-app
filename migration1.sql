@@ -1,3 +1,7 @@
+DROP TYPE IF EXISTS platform_type_state;
+
+CREATE TYPE platform_type_state AS ENUM('home', 'handheld', 'hybrid');
+
 CREATE TABLE IF NOT EXISTS platforms(
 	platform_id VARCHAR(15),
 	platform_name VARCHAR(30),
@@ -180,8 +184,17 @@ SELECT game_id, title, platform, release_date, status, notes
 FROM game_catalog2;
 
 INSERT INTO game_genres
-SELECT g.game_id, unnest(genres)
+SELECT g.game_id, UNNEST(genres)
 FROM games AS g
 JOIN game_catalog2 AS gc ON g.game_token = gc.game_id;
 
 DROP TABLE game_catalog2;
+
+CREATE TABLE IF NOT EXISTS migrations(
+	migration_id INT PRIMARY KEY,
+	migration_name TEXT NOT NULL,
+	applied_at TIMESTAMP NOT NULL
+);
+
+INSERT INTO migrations (migration_id, migration_name, applied_at)
+VALUES (1, '001_5-table_structure_implemented', NOW());
