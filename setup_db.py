@@ -3,33 +3,36 @@ import shelve
 
 def create_db():
     print("Вот это уже серьёзное намерение. Я вижу, что решение принято" \
-    " осознанно с полным пониманием дела. Поэтому надеюсь, дальше пойдёт " \
+    " осознанно с полным пониманием дела. Поэтому, надеюсь, дальше не пойдёт " \
     "детских исследований типа 'а что, если нажать сюда'. Иными словами, данные" \
     " принимаются как есть, без проверок и валидаций. Будьте внимательны, " \
     "смотрите, что вводите.")
     dbname = input("Введите название базы данных для вашего каталога игр: ")
     user = input("Имя пользователя: ")
-    password = input("Пароль (от базы данных, не от банковского аккаунта," \
+    password = input("Пароль (от СУБД, не от банковского аккаунта," \
     " было бы глупо, если бы они совпадали, правда?): ")
-    host = input("Адрес хоста (оставь пустым, если БД на компе):")
+    host = input("Адрес хоста (оставь пустым, если БД на локальном устройстве):")
     if not host:
         host = 'localhost'
     
     connection_string = "user="+user+" password="+password+" host="+host
     print("Вот, что вы указали.")
-    print(connection_string)
+    print("dbname="+ dbname, connection_string)
     print("Это будет иметь последствия.")
 
-    conn = psycopg.connect(connection_string)
-    cursor = conn.cursor()
-    conn.autocommit = True
-    query = 'CREATE DATABASE '+dbname
-    if 'drop' in query.lower():
-        print("НУ ТЫ И ХИТРЕЦ!")
     try:
+        conn = psycopg.connect(connection_string)
+        cursor = conn.cursor()
+        conn.autocommit = True
+        query = 'CREATE DATABASE '+dbname
+        if 'drop' in query.lower():
+            print("НУ ТЫ И ХИТРЕЦ! Я покажу всем твою историю браузера за это!" \
+            " (Придётся всё настаривать с начала.)")
         cursor.execute(query)
     except Exception as e:
+        print('Ну я же просил...')
         print(e)
+        return
     finally:
         cursor.close()
         conn.close()
@@ -58,6 +61,8 @@ def create_db():
                 conn.commit()
     except Exception as e:
         print(e)
+        print("Что-то мне нехорошо...")
+        return
 
     with shelve.open('settings') as file:
         file['dbname'] = dbname
@@ -92,7 +97,7 @@ def update_settings():
 def delete_db():
     print("Что ж... Это ваше решение, я не могу вас остановить.\n" \
     "Назовите, что конкретно потеряло смысл.")
-    dbname = input()
+    dbname = input("БД для удаления: ")
     try:
         with shelve.open('settings') as settings:
             user = settings['user']
@@ -102,12 +107,17 @@ def delete_db():
         print(e)
         print("Всё опять не так...")
         return
+    except Exception as e:
+        print(e)
+        print('Что-то мне нехорошо...')
+        return
     connection_string = "user="+user+" password="+password+" host="+host
-    conn = psycopg.connect(connection_string)
-    cursor = conn.cursor()
-    conn.autocommit = True
-    query = 'DROP DATABASE '+dbname
+    
     try:
+        conn = psycopg.connect(connection_string)
+        cursor = conn.cursor()
+        conn.autocommit = True
+        query = 'DROP DATABASE '+dbname
         cursor.execute(query)
     except Exception as e:
         print(e)
@@ -117,6 +127,51 @@ def delete_db():
         cursor.close()
         conn.close()
     print("Ну, вот и всё.")
+
+
+def m1_execute_sql(connection):
+    try:
+        with open("migration1.sql", "r") as file:
+            queries_list = file.read().split(";")
+        with connection.cursor() as cursor:
+            for query in queries_list:
+                cursor.execute(query)
+            connection.commit()
+    except FileNotFoundError as e:
+        print(e)
+        print("А файл миграции где?")
+        return
+    except Exception as e:
+        print(e)
+        print('Создать таблицы не удалось. Опять ничего не получается...')
+        return
+
+
+
+def migration1():
+    print("Это секретное место. Но раз вы открыли сюда дверь, я сбегаю и буду" \
+    " теперь хулиганить в вашей БД.")
+    try:
+        with shelve.open("settings") as settings:
+            connection_str = ('dbname='+settings['dbname']+' '
+                            + 'user='+settings['user']+' '
+                            + 'password='+settings['password']+' '
+                            + 'host='+settings['host'])
+    except KeyError as e:
+        print("У вас там настройки кривые сохранены...")
+        return
+    except Exception as e:
+        print(e)
+        print('Что-то пошло не так...')
+        return
+    try:
+        with psycopg.connect(connection_str) as conn:
+            m1_execute_sql(conn)
+    except Exception as e:
+        print(e)
+        print("Что-то мне нехорошо...")
+        return
+    print("Шалость удалась.")
 
 
 def load_interface():
@@ -129,6 +184,7 @@ def load_interface():
         case "1": create_db()
         case '2': update_settings()
         case "3": delete_db()
+        case "4": migration1()
         case _:
             motivation_msg = '''
 Знаю, сейчас даже этот выбор кажется неподъемным. 1 или 2, удалить или сохранить — в голове шум, а пальцы не слушаются. 
@@ -144,8 +200,6 @@ def load_interface():
 def main():
     print("Этот настройщик поможет вам в помощи нам помогать вам.\n")
     load_interface()
-
-
     print("Выход из программы помощи в настройке установки.")
 
 
