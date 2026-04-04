@@ -41,18 +41,18 @@ class Game:
     }
     VALID_PLATFORMS = {
         "pc",
-        "dendy", "famicom", "master system",
-        "mega drive", "super famicom",
-        "game boy", "game gear",
-        "saturn", "ps1", "nintendo 64",
-        "game boy color",
-        "dreamcast", "ps2", "gamecube", "xbox",
-        "game boy advance",
-        "xbox 360", "ps3", "wii",
+        "dendy", "fc", "sms",
+        "smd", "sfc",
+        "gb", "gg",
+        "strn", "ps1", "n64",
+        "gbc",
+        "dc", "ps2", "gc", "xbox",
+        "gba",
+        "x360", "ps3", "wii",
         "ds", "psp",
-        "wii u", "ps4", "xbox one", "switch",
-        "3ds", "ps vita",
-        "xbox series", "ps5", "switch 2",
+        "wiiu", "ps4", "xone", "sw",
+        "3ds", "psv",
+        "xs", "ps5", "sw2",
     }
 
     
@@ -262,9 +262,9 @@ class GameCatalog:
         #print('connection closed')
     
 
-    # Генерируем ID из названия, используя только первую букву, согласные и цифры.
+    # Генерируем токен из названия, используя только первую букву, согласные и цифры.
     @staticmethod
-    def _generate_game_id(title, platform):
+    def _generate_game_token(title, platform):
         id = title.lower().lstrip()
         id = id.replace(" ", "")
         id = GameCatalog._delete_vowels_for_id(id + platform.lower())
@@ -304,7 +304,7 @@ class GameCatalog:
         Выбрасывает:
             GameExistsError - если игра с получившимся ID существует
         """
-        new_game_id = GameCatalog._generate_game_id(title, platform)
+        new_game_id = GameCatalog._generate_game_token(title, platform)
         game_exists = self.check_game_in_catalog(new_game_id)
         if game_exists:
             raise GameExistsError(new_game_id)
@@ -455,7 +455,7 @@ GROUP BY games.game_id;
             return ''
         
         if need_new_id:
-            updates['game_id'] = GameCatalog._generate_game_id(edited_game.title, edited_game.platform)
+            updates['game_id'] = GameCatalog._generate_game_token(edited_game.title, edited_game.platform)
         
         # TODO: собрать в один запрос
         with self.connection.cursor() as cursor:
