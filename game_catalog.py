@@ -345,25 +345,27 @@ class GameCatalog:
                 return title
             
 
-    def get_game(self, game_id: str) -> GameInList:
+    def get_game(self, game_token: str) -> GameInList:
         """
-        Извлекает данные игры из каталога по её game_id.
+        Извлекает данные игры из каталога по её game_token.
 
         Возвращает:
             GameInList - если игра найдена
             
         Выбрасывает:
-            GameNotFoundError - если игры с указанным ID нет
+            GameNotFoundError - если игры с указанным токеном нет
         """
         with self.connection.cursor() as cursor:
             cursor.execute('''
-                SELECT title, platform, release_date, genres, status, notes
-                FROM game_catalog 
-                WHERE game_id=%s;
+SELECT title, platform_id, release_date, array_agg(genre_id), status, notes
+FROM games
+JOIN game_genres ON game_genres.game_id=games.game_id
+WHERE game_token=%s
+GROUP BY games.game_id;
                 ''', 
-                (game_id,))
+                (game_token,))
             if cursor.rowcount == 0:
-                raise GameNotFoundError(game_id)
+                raise GameNotFoundError(game_token)
             title, platform, release_date, genres, status, commentary = cursor.fetchone()
             game = GameInList(title, platform, release_date, genres, status, commentary)
             return game
@@ -472,15 +474,15 @@ class GameCatalog:
     def get_all_games(self) -> dict:
         """
         Получает список всех игр в каталоге в виде словаря
-        вида [game_id: title].
+        вида [game_token: title].
         """
         with self.connection.cursor() as cursor:
             cursor.execute('''
-                SELECT game_id, title
-                FROM game_catalog;
+                SELECT game_token, title
+                FROM games;
                            ''')
             
             all_games_dict = {}
-            for game_id, title in cursor:
-                all_games_dict[game_id] = title
+            for game_token, title in cursor:
+                all_games_dict[game_token] = title
         return all_games_dict
