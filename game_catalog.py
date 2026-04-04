@@ -299,32 +299,44 @@ class GameCatalog:
                 по умолчанию пустая строка
 
         Возвращает:
-            str - id новой игры
+            str - токен новой игры
 
         Выбрасывает:
             GameExistsError - если игра с получившимся ID существует
         """
-        new_game_id = GameCatalog._generate_game_token(title, platform)
-        game_exists = self.check_game_in_catalog(new_game_id)
+        new_game_token = GameCatalog._generate_game_token(title, platform)
+        game_exists = self.check_game_in_catalog(new_game_token)
         if game_exists:
-            raise GameExistsError(new_game_id)
+            raise GameExistsError(new_game_token)
         try:
             new_game = GameInList(title, platform, release_date, genres, status, comment)
         except Exception as e:
             raise e
-        query = (t'''
-            INSERT INTO game_catalog (game_id, title, platform, release_date, 
-                                      genres, status, notes) 
-            VALUES ({new_game_id}, {new_game.title}, {new_game.platform}, {new_game.release_date}, 
-                    {list(new_game.genres)}, {new_game.status}, {new_game.comment});
+        query_game = (t'''
+INSERT INTO games (game_token, title, platform_id, release_date, status, notes) 
+VALUES ({new_game_token}, {new_game.title}, {new_game.platform}, {new_game.release_date}, 
+                    {new_game.status}, {new_game.comment});
                ''')
-        with self.connection.cursor() as cursor:
-            cursor.execute(query)
-            self.connection.commit()
-        return new_game_id
+        query_genres = (t'''
+INSERT INTO game_genres (game_id, genre_id)
+        SELECT game_id, genre_id
+        FROM games
+        CROSS JOIN genres
+        WHERE game_token={new_game_token}
+          AND genre_id=ANY({list(new_game.genres)})
+                        ''')
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(query_game)
+                cursor.execute(query_genres)
+                self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise e
+        return new_game_token
 
 
-    def check_game_in_catalog(self, game_id: str) -> str:
+    def check_game_in_catalog(self, game_token: str) -> str:
         """
         Проверяет наличие игры в каталоге.
 
@@ -334,10 +346,10 @@ class GameCatalog:
         with self.connection.cursor() as cursor:
             cursor.execute('''
                 SELECT title
-                FROM game_catalog 
-                WHERE game_id=%s;
+                FROM games 
+                WHERE game_token=%s;
                 ''', 
-                (game_id,))
+                (game_token,))
             if cursor.rowcount == 0:
                 return ''
             else:
@@ -359,7 +371,7 @@ class GameCatalog:
             cursor.execute('''
 SELECT title, platform_id, release_date, array_agg(genre_id), status, notes
 FROM games
-JOIN game_genres ON game_genres.game_id=games.game_id
+LEFT JOIN game_genres ON game_genres.game_id=games.game_id
 WHERE game_token=%s
 GROUP BY games.game_id;
                 ''', 
