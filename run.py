@@ -57,6 +57,7 @@ def add_game_cli(catalog):
     try:
         adding_result = catalog.add_game(title, platform, release_date, genres, status, notes)
     except Exception as e:
+        print(type(e))
         print(e)
         return
     print(f"\nИгра успешно добавлена с ID {adding_result}")
