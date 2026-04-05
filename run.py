@@ -128,6 +128,7 @@ def update_game_cli(catalog):
     try:
         id = catalog.update_game(id, new_data)
     except Exception as e:
+        print(type(e))
         print(e)
         return
     print(f"Данные игры с ID {id} обновлены.")
