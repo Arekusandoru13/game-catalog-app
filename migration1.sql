@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS game_genres(
 	game_id INT,
 	genre_id VARCHAR(30),
 	CONSTRAINT game_genres_pkey PRIMARY KEY (game_id, genre_id),
-	CONSTRAINT game_fkey FOREIGN KEY (game_id) REFERENCES games (game_id),
+	CONSTRAINT game_fkey FOREIGN KEY (game_id) REFERENCES games (game_id) ON DELETE CASCADE,
 	CONSTRAINT genre_fkey FOREIGN KEY (genre_id) REFERENCES genres (genre_id)
 );
 
