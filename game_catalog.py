@@ -139,6 +139,9 @@ class Game:
                 в списке допустимых жанров
         """
         set_of_genres = set(genres)
+        if not set_of_genres:
+            return
+        set_of_genres.discard(None)
         invalid_genres = set_of_genres - self.VALID_GENRES
         if invalid_genres:
             raise ValueError(f"Жанры {invalid_genres} отсутствуют в списке допустимых жанров.")
@@ -302,7 +305,7 @@ class GameCatalog:
             str - токен новой игры
 
         Выбрасывает:
-            GameExistsError - если игра с получившимся ID существует
+            GameExistsError - если игра с получившимся токеном существует
         """
         new_game_token = GameCatalog._generate_game_token(title, platform)
         game_exists = self.check_game_in_catalog(new_game_token)
@@ -383,22 +386,25 @@ GROUP BY games.game_id;
             return game
 
 
-    def delete_game(self, game_id: str) -> GameInList:
+    def delete_game(self, game_token: str) -> GameInList:
         """
-        Удаляет игру с указанным game_id из каталога, возвращает её данные
+        Удаляет игру с указанным game_token из каталога, возвращает её данные
         в виде объекта GameInList.
         """
-        game = self.get_game(game_id)
+        game = self.get_game(game_token)
         if not game:
-            raise GameNotFoundError(game_id)
+            raise GameNotFoundError(game_token)
         
         query = (t'''
-            DELETE FROM game_catalog WHERE game_id={game_id};
+            DELETE FROM games WHERE game_token={game_token};
                ''')
-        with self.connection.cursor() as cursor:
-            cursor.execute(query)
-            self.connection.commit()
-
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(query)
+                self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise e
         return game
 
 
@@ -423,64 +429,94 @@ GROUP BY games.game_id;
 
 
 
-    def update_game(self, game_id: str, new_data: dict) -> str:
+    def update_game(self, game_token: str, new_data: dict) -> str:
         """
         Обновляет данные игры.
 
         Аргументы:
-            game_id (str): ID игры, данные которой нужно обновить
+            game_token (str): токен игры, данные которой нужно обновить
             new_data (dict): словарь с необходимыми для обновления полями
 
         Возвращает:
-            '' - если данные обновить не удалось
-            game_id (str) - актуальный ID изменяемой игры
+            game_token (str) - актуальный токен изменяемой игры
 
         Выбрасывает:
-            GameNotFoundError - если игры с указанным ID нет в каталоге
+            GameNotFoundError - если игры с указанным токеном нет в каталоге
         """
-        edited_game = self.get_game(game_id)
+        edited_game = self.get_game(game_token)
         if not edited_game:
-            raise GameNotFoundError(game_id)
-        updates = dict()
-        need_new_id = False
-
-        if 'title' in new_data:
-            edited_game.title = new_data['title']
-            updates['title'] = edited_game.title
-            need_new_id = True
-        if 'platform' in new_data:
-            edited_game.platform = new_data['platform']
-            updates['platform'] = edited_game.platform
-            need_new_id = True
-        if 'release_date' in new_data:
-            edited_game.release_date = new_data['release_date']
-            updates['release_date'] = edited_game.release_date
-        if 'genres' in new_data:
-            GameCatalog._update_genres(edited_game, new_data['genres'])
-            updates['genres'] = list(edited_game.genres)
-        if 'status' in new_data:
-            edited_game.status = new_data['status']
-            updates['status'] = edited_game.status
-        if 'notes' in new_data:
-            updates['notes'] = new_data['notes']
-        if not updates:
-            return ''
-        
-        if need_new_id:
-            updates['game_id'] = GameCatalog._generate_game_token(edited_game.title, edited_game.platform)
+            raise GameNotFoundError(game_token)
+        #updates = dict()
+        need_new_token = False
+        try:
+            with self.connection.cursor() as cursor:
+                if 'title' in new_data:
+                    edited_game.title = new_data['title']
+                    #updates['title'] = edited_game.title
+                    need_new_token = True
+                    cursor.execute(t'''
+    UPDATE games SET title={edited_game.title} WHERE game_token={game_token}
+    ''')
+                if 'platform' in new_data:
+                    edited_game.platform = new_data['platform']
+                    #updates['platform'] = edited_game.platform
+                    need_new_token = True
+                    cursor.execute(t'''
+    UPDATE games SET platform_id={edited_game.platform} WHERE game_token={game_token}
+    ''')
+                if 'release_date' in new_data:
+                    edited_game.release_date = new_data['release_date']
+                    #updates['release_date'] = edited_game.release_date
+                    cursor.execute(t'''
+    UPDATE games SET release_date={edited_game.release_date} WHERE game_token={game_token}
+    ''')
+                if 'genres' in new_data:
+                    GameCatalog._update_genres(edited_game, new_data['genres'])
+                    #updates['genres'] = list(edited_game.genres)
+                    cursor.execute(t'''
+    DELETE FROM game_genres WHERE game_id=(SELECT game_id FROM games WHERE game_token={game_token})
+    ''')
+                    cursor.execute(t'''
+    INSERT INTO game_genres (game_id, genre_id)
+    SELECT game_id, genre_id
+    FROM games
+    CROSS JOIN genres
+    WHERE game_token={game_token} AND genre_id=ANY({list(edited_game.genres)})
+    ''')
+                if 'status' in new_data:
+                    edited_game.status = new_data['status']
+                    #updates['status'] = edited_game.status
+                    cursor.execute(t'''
+    UPDATE games SET status={edited_game.status} WHERE game_token={game_token}
+    ''')
+                if 'notes' in new_data:
+                    #updates['notes'] = new_data['notes']
+                    cursor.execute(t'''
+    UPDATE games SET notes={new_data['notes']} WHERE game_token={game_token}
+    ''')        
+                if need_new_token:
+                    new_token = GameCatalog._generate_game_token(edited_game.title, edited_game.platform)
+                    cursor.execute(t'''
+    UPDATE games SET game_token={new_token} WHERE game_token={game_token}
+    ''')
+                    
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise e
         
         # TODO: собрать в один запрос
-        with self.connection.cursor() as cursor:
-            for key, value in updates.items():
-                cursor.execute(
-                    psycopg.sql.SQL(
-                        "UPDATE game_catalog SET {}=(%s) WHERE game_id=%s"
-                    ).format(psycopg.sql.Identifier(key)), (value, game_id)
-            )        
-        self.connection.commit()
+#        with self.connection.cursor() as cursor:
+ #           for key, value in updates.items():
+  #              cursor.execute(
+   #                 psycopg.sql.SQL(
+    #                    "UPDATE game_catalog SET {}=(%s) WHERE game_id=%s"
+     #               ).format(psycopg.sql.Identifier(key)), (value, game_token)
+      #      )        
+       # self.connection.commit()
 
-        if need_new_id: return updates["game_id"]
-        else: return game_id
+        if need_new_token: return new_token
+        else: return game_token
 
 
     def get_all_games(self) -> dict:
