@@ -59,6 +59,8 @@ def create_db():
                         notes text);
 ''')
                 conn.commit()
+            #TODO: переписать функцию создания дб
+            m1_execute_sql(conn)
     except Exception as e:
         print(e)
         print("Что-то мне нехорошо...")
@@ -158,8 +160,7 @@ SELECT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'migrations')
 
 
 def migration1():
-    print("Это секретное место. Но раз вы открыли сюда дверь, я сбегаю и буду" \
-    " теперь хулиганить в вашей БД.")
+    print("Сейчас всё станет лучше. Или не сейчас. Но, наверно, станет. Может быть (вряд ли).")
     try:
         with shelve.open("settings") as settings:
             connection_str = ('dbname='+settings['dbname']+' '
@@ -184,14 +185,15 @@ def migration1():
         print(e)
         print("Что-то мне нехорошо...")
         return
-    print("Шалость удалась.")
+    print("Шалость удалась. Теперь всё хорошо. Пробуйте жить с этим.")
 
 
 def load_interface():
     print("Чем вам помочь?\n" \
     "1. Настроить базу данных для работы с каталогом игр.\n" \
     "2. Уточнить текущую конфигурацию.\n" \
-    "3. Всё больше не имеет смысла.\n")
+    "3. Всё больше не имеет смысла.\n"
+    "4. У меня всё стало по-другому и не работает, почини.\n")
     selection = input("На какой вариант вы себя чувствуете?\n")
     match selection:
         case "1": create_db()
